@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>near_symmetric.m</title>
+  <meta name="keywords" content="near_symmetric">
+  <meta name="description" content="Determine if a matrix is symmetric within the given tolerance.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">misc</a> &gt; near_symmetric.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/misc&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>near_symmetric
+</h1>
+<h3>Determine if a matrix is symmetric within the given tolerance.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [out] = near_symmetric(A,tol) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Determine if a matrix is symmetric within the given tolerance.
+
+ INPUTS:
+    A: input matrix
+    tol (optional): value between 0 and 1 
+ 
+ OUTPUT:
+    +1 if A is symmetric
+    -1 if A is skew-symmetric
+     0 if A is non-symmetric</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [out] = near_symmetric(A,tol)</a>
+0002 <span class="comment">% Determine if a matrix is symmetric within the given tolerance.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% INPUTS:</span>
+0005 <span class="comment">%    A: input matrix</span>
+0006 <span class="comment">%    tol (optional): value between 0 and 1</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% OUTPUT:</span>
+0009 <span class="comment">%    +1 if A is symmetric</span>
+0010 <span class="comment">%    -1 if A is skew-symmetric</span>
+0011 <span class="comment">%     0 if A is non-symmetric</span>
+0012 <span class="comment">%</span>
+0013 <span class="keyword">arguments</span>
+0014     A   (:,:) double {mustBeFinite}
+0015     tol (1,1) {mustBeInRange(tol,0,1)} = 1e-12;
+0016 <span class="keyword">end</span>
+0017 
+0018 <span class="keyword">if</span> size(A,1)~=size(A,2)
+0019     <span class="comment">% input matrix is not square</span>
+0020     out = 0;
+0021     <span class="keyword">return</span>;
+0022 <span class="keyword">end</span>
+0023 
+0024 <span class="comment">% check if input has exact symmetry</span>
+0025 isSymm = issymmetric(A,<span class="string">&quot;nonskew&quot;</span>);
+0026 isSkew = issymmetric(A,<span class="string">&quot;skew&quot;</span>);
+0027 
+0028 <span class="keyword">if</span> (~isSymm &amp;&amp; ~isSkew)
+0029     <span class="comment">% input is not exactly symmetric</span>
+0030     <span class="keyword">if</span> tol==0
+0031         out = 0;
+0032         <span class="keyword">return</span>
+0033     <span class="keyword">end</span>
+0034 <span class="keyword">elseif</span> isSymm
+0035     <span class="comment">% input is exactly symmetric</span>
+0036     out = +1;
+0037     <span class="keyword">return</span>
+0038 <span class="keyword">elseif</span> isSkew
+0039     <span class="comment">% input is exactly skew-symmetric</span>
+0040     out = -1;
+0041     <span class="keyword">return</span>
+0042 <span class="keyword">end</span>
+0043 
+0044 <span class="comment">% find the error threshold for the input</span>
+0045 <span class="keyword">if</span> issparse(A)
+0046     error = (tol/eps)*spfun(@eps,A);
+0047     error = (error + error.');
+0048     max_err = max(nonzeros(error));
+0049     min_err = min(nonzeros(error));
+0050 <span class="keyword">else</span>
+0051     error = (tol/eps)*eps(A);
+0052     error = (error + error.');
+0053     max_err = max(error(:));
+0054     min_err = min(error(:));
+0055 <span class="keyword">end</span>
+0056 
+0057 <span class="comment">% check if input is symmetric</span>
+0058 <span class="keyword">if</span> ~isSymm &amp;&amp; ~isSkew
+0059     A_symm = abs(A - A.');
+0060 
+0061     <span class="keyword">if</span> all(A_symm &lt; min_err,<span class="string">&quot;all&quot;</span>)
+0062         isSymm = true;
+0063     <span class="keyword">elseif</span> any(A_symm &gt; max_err,<span class="string">&quot;all&quot;</span>)
+0064         isSymm = false;
+0065     <span class="keyword">else</span>
+0066         isSymm = all(A_symm &lt; error,<span class="string">&quot;all&quot;</span>);
+0067     <span class="keyword">end</span>
+0068 <span class="keyword">end</span>
+0069 
+0070 <span class="comment">% check if input is skew-symmetric</span>
+0071 <span class="keyword">if</span> ~isSymm &amp;&amp; ~isSkew
+0072     A_skew = abs(A + A.');
+0073 
+0074     <span class="keyword">if</span> all(A_symm &lt; min_err,<span class="string">&quot;all&quot;</span>)
+0075         isSkew = true;
+0076     <span class="keyword">elseif</span> any(A_skew &gt; max_err,<span class="string">&quot;all&quot;</span>)
+0077         isSkew = false;
+0078     <span class="keyword">else</span>
+0079         isSkew = all(A_skew &lt; error,<span class="string">&quot;all&quot;</span>);
+0080     <span class="keyword">end</span>
+0081 <span class="keyword">end</span>
+0082 
+0083 <span class="keyword">if</span> ~isSymm &amp;&amp; ~isSkew
+0084     <span class="comment">% input is not symmetric</span>
+0085     out = 0;
+0086 <span class="keyword">elseif</span> isSymm
+0087     <span class="comment">% input is symmetric</span>
+0088     out = +1;
+0089 <span class="keyword">elseif</span> isSkew
+0090     <span class="comment">% input is skew-symmetric</span>
+0091     out = -1;
+0092 <span class="keyword">end</span>
+0093 <span class="keyword">end</span></pre></div>
+</body>
+</html>

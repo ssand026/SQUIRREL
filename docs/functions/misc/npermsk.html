@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>npermsk.m</title>
+  <meta name="keywords" content="npermsk">
+  <meta name="description" content="For a set containing &quot;n&quot; distinct elements, return all possible permutations of length &quot;k&quot;">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">misc</a> &gt; npermsk.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/misc&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>npermsk
+</h1>
+<h3>For a set containing &quot;n&quot; distinct elements, return all possible permutations of length &quot;k&quot;</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [varargout] = npermsk(n,k) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> For a set containing &quot;n&quot; distinct elements, return all possible permutations of length &quot;k&quot;
+ The order of the elements of a permutation does matter: each row of the output
+ contains &quot;k&quot; elements in the range [1,n], where repeated values are allowed.
+
+ SEE ALSO: <a href="ncombsk.html" class="code" title="function [varargout] = ncombsk(n,k)">NCOMBSK</a></pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>	<a>Returns the specified finite-element matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>	<a>Computes the barycentric integral coefficients</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [varargout] = npermsk(n,k)</a>
+0002 <span class="comment">% For a set containing &quot;n&quot; distinct elements, return all possible permutations of length &quot;k&quot;</span>
+0003 <span class="comment">% The order of the elements of a permutation does matter: each row of the output</span>
+0004 <span class="comment">% contains &quot;k&quot; elements in the range [1,n], where repeated values are allowed.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% SEE ALSO: NCOMBSK</span>
+0007 <span class="keyword">arguments</span>
+0008     n (1,1) {mustBePositive,mustBeInteger}
+0009     k (1,1) {mustBePositive,mustBeInteger}
+0010 <span class="keyword">end</span>
+0011 
+0012 <span class="comment">% create the permutation list</span>
+0013 perm_list = repmat([1:n^k].',1,k);
+0014 perm_list = ceil(perm_list ./ (n.^[0:k-1]));
+0015 perm_list = mod(perm_list,n);
+0016 perm_list(perm_list==0) = n;
+0017 
+0018 <span class="keyword">if</span> nargout&lt;=1
+0019     <span class="comment">% output the list of permutations as an array</span>
+0020     varargout{1} = perm_list;
+0021 <span class="keyword">else</span>
+0022     <span class="comment">% push each column of the permutation list to the output</span>
+0023     varargout = cell(1,nargout-1);
+0024     <span class="keyword">for</span> ii = 1:nargout
+0025         varargout{ii} = perm_list(:,ii);
+0026     <span class="keyword">end</span>
+0027 <span class="keyword">end</span>
+0028 <span class="keyword">end</span></pre></div>
+</body>
+</html>

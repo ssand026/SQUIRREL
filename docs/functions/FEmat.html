@@ -1,0 +1,457 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>FEmat.m</title>
+  <meta name="keywords" content="FEmat">
+  <meta name="description" content="Returns the specified finite-element matrix">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; FEmat.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>FEmat
+</h1>
+<h3>Returns the specified finite-element matrix</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [out] = FEmat(pts, tri, matType, scalarC, vectorC) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns the specified finite-element matrix
+
+ INPUTS:
+    pts: mesh node locations
+    tri: mesh triangulation
+    matType (string): type of matrix to construct
+    scalarC: scalar/tensor coefficient for the matrix
+    vectorC: vector coefficient for the matrix
+
+ SEE ALSO: FEMAT_NULLSPACE, FEMAT_ORTHOBASIS, FEMAT_OVERLAP, PARPOOL</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a> Evaluates the input as a finite-element coefficient.</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a> Computes the barycentric integral coefficients</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/baryvectors.html" class="code" title="function [bvec] = baryvectors(pts,tri)">baryvectors</a> (memoized) Computes the barycentric vector corresponding to each vertex in the mesh</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/boundary_nodes.html" class="code" title="function [bnodes] = boundary_nodes(pts,tri)">boundary_nodes</a> Returns the logical index corresponding to nodes on the mesh boundary</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a> Expands the coefficient so its value is given for the vertices of each simplex</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/femat_nullspace.html" class="code" title="function [B] = femat_nullspace(pts,tri)">femat_nullspace</a> (memoized) Returns the finite-element nullspace matrix</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/femat_orthobasis.html" class="code" title="function [B] = femat_orthobasis(pts,tri)">femat_orthobasis</a> (memoized) Returns the matrix that converts between the full and orthonormal basis</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/femat_overlap.html" class="code" title="function [M] = femat_overlap(pts,tri)">femat_overlap</a> (memoized) Returns the finite-element overlap matrix</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a> (memoized) computes the hypervolume of each simplex in the mesh</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/meshing/mesh_faces.html" class="code" title="function [faces] = mesh_faces(pts,tri)">mesh_faces</a> Returns the list of all unique faces contained within the mesh</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a> For a set containing "n" distinct elements, return all possible permutations of length "k"</li>
+</ul>
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="FE_dipole.html" class="code" title="function [varargout] = FE_dipole(pts,tri,fieldType,massCoeff,opt)">FE_dipole</a>	<a>Constructs the dipole-moment matrices for spatially-invariant electric or magnetic fields.</a></li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="FE_init.html" class="code" title="function [K,V,M,B,muE,muB,muZ] = FE_init(pts,tri,massCoeff,bandCoeff,basis)">FE_init</a>	<a>Computes all components of the finite-element Hamiltonian in the specified basis.</a></li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="setup_poisson.html" class="code" title="function [poissFunc] = setup_poisson(pts,tri,epsCoeff,opt)">setup_poisson</a>	<a>Initializes the solver for the Poisson equation.</a></li>
+</ul>
+<h2><a name="_subfunctions"></a>Subfunctions: </h2>
+<div class="box"><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [V] = femat_potential(pts,tri,scalarC)</a></li><li><a href="#_sub2" class="code">function [K] = femat_stiffness(pts,tri,scalarC)</a></li><li><a href="#_sub3" class="code">function [B] = femat_surface(pts,tri,scalarC,vectorC)</a></li><li><a href="#_sub4" class="code">function [X] = femat_skew_vector(pts,tri,scalarC,vectorC)</a></li><li><a href="#_sub5" class="code">function [Z] = femat_symm_vector(pts,tri,scalarC,vectorC)</a></li></ul></div>
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [out] = FEmat(pts, tri, matType, scalarC, vectorC)</a>
+0002 <span class="comment">% Returns the specified finite-element matrix</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% INPUTS:</span>
+0005 <span class="comment">%    pts: mesh node locations</span>
+0006 <span class="comment">%    tri: mesh triangulation</span>
+0007 <span class="comment">%    matType (string): type of matrix to construct</span>
+0008 <span class="comment">%    scalarC: scalar/tensor coefficient for the matrix</span>
+0009 <span class="comment">%    vectorC: vector coefficient for the matrix</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% SEE ALSO: FEMAT_NULLSPACE, FEMAT_ORTHOBASIS, FEMAT_OVERLAP, PARPOOL</span>
+0012 <span class="keyword">arguments</span>
+0013     pts (:,:) double {mustBeFinite,mustBeReal}
+0014     tri (:,:) {mustBeInteger,mustBePositive}
+0015     matType string {mustBeMember(matType,[<span class="string">&quot;potential&quot;</span>,<span class="string">&quot;stiffness&quot;</span>,<span class="string">&quot;surface&quot;</span>,<span class="keyword">...</span>
+0016         <span class="string">&quot;skew-vector&quot;</span>,<span class="string">&quot;symm-vector&quot;</span>,<span class="string">&quot;overlap&quot;</span>,<span class="string">&quot;dirichlet&quot;</span>,<span class="string">&quot;nullspace&quot;</span>,<span class="string">&quot;orthobasis&quot;</span>])}
+0017     scalarC {mustBeA(scalarC,{<span class="string">'cell'</span>,<span class="string">'string'</span>,<span class="string">'char'</span>,<span class="string">'function_handle'</span>,<span class="string">'numeric'</span>,<span class="string">'logical'</span>})} = [];
+0018     vectorC {mustBeA(vectorC,{<span class="string">'cell'</span>,<span class="string">'string'</span>,<span class="string">'char'</span>,<span class="string">'function_handle'</span>,<span class="string">'numeric'</span>,<span class="string">'logical'</span>})} = [];
+0019 <span class="keyword">end</span>
+0020 
+0021 <span class="comment">% trim the triangulation to the nearest polynomial order</span>
+0022 Ndim = size(pts,1);
+0023 vtx_len = cumsum(factorial(Ndim+1)./(factorial(Ndim-[0:Ndim]) .* factorial([1:Ndim+1])));
+0024 Npoly = find(size(tri,1)&gt;=vtx_len,1,<span class="string">&quot;last&quot;</span>);
+0025 tri = tri(1:vtx_len(Npoly),:);
+0026 
+0027 <span class="comment">% evaluate the coefficients and check their size</span>
+0028 <span class="keyword">switch</span> matType
+0029     <span class="keyword">case</span> <span class="string">&quot;potential&quot;</span>
+0030         <span class="comment">% eval scalar coeff</span>
+0031         [scalarC,order] = <a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>(pts,tri,scalarC);
+0032         <span class="keyword">if</span> order ~= 0
+0033             error(<span class="string">&quot;ERROR: the scalar coefficient must be of order 0&quot;</span>)
+0034         <span class="keyword">end</span>
+0035     <span class="keyword">case</span> <span class="string">&quot;stiffness&quot;</span>
+0036         <span class="comment">% eval scalar/tensor coeff</span>
+0037         [scalarC,order] = <a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>(pts,tri,scalarC);
+0038         <span class="keyword">if</span> order &gt;= 3
+0039             error(<span class="string">&quot;ERROR: the scalar coefficient must be of order 0, 1, or 2&quot;</span>)
+0040         <span class="keyword">end</span>
+0041     <span class="keyword">case</span> <span class="string">&quot;surface&quot;</span>
+0042         <span class="comment">% eval scalar/tensor coeff</span>
+0043         [scalarC,order] = <a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>(pts,tri,scalarC);
+0044         <span class="keyword">if</span> order &gt;= 3
+0045             error(<span class="string">&quot;ERROR: the scalar coefficient must be of order 0, 1, or 2&quot;</span>)
+0046         <span class="keyword">end</span>
+0047         <span class="keyword">if</span> ~isempty(vectorC)
+0048             <span class="comment">% check vector coeff</span>
+0049             [vectorC,order] = <a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>(pts,tri,vectorC);
+0050             <span class="keyword">if</span> order ~= 1
+0051                 error(<span class="string">&quot;ERROR: the vector coefficient must be of order 1&quot;</span>)
+0052             <span class="keyword">end</span>
+0053         <span class="keyword">end</span>
+0054 
+0055     <span class="keyword">case</span> {<span class="string">&quot;skew-vector&quot;</span>,<span class="string">&quot;symm-vector&quot;</span>}
+0056         <span class="comment">% eval scalar/tensor coeff</span>
+0057         [scalarC,order] = <a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>(pts,tri,scalarC);
+0058         <span class="keyword">if</span> order &gt;= 3
+0059             error(<span class="string">&quot;ERROR: the scalar coefficient must be of order 0, 1, or 2&quot;</span>)
+0060         <span class="keyword">end</span>
+0061         <span class="comment">% check vector coeff</span>
+0062         [vectorC,order] = <a href="coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>(pts,tri,vectorC);
+0063         <span class="keyword">if</span> order ~= 1
+0064             error(<span class="string">&quot;ERROR: the vector coefficient must be of order 1&quot;</span>)
+0065         <span class="keyword">end</span>
+0066 <span class="keyword">end</span>
+0067 
+0068 <span class="comment">% compute appropriate matrix type</span>
+0069 <span class="keyword">switch</span> matType
+0070     <span class="keyword">case</span> <span class="string">&quot;overlap&quot;</span>
+0071         out = <a href="../functions/finite_elements/femat_overlap.html" class="code" title="function [M] = femat_overlap(pts,tri)">femat_overlap</a>(pts,tri);
+0072     <span class="keyword">case</span> {<span class="string">&quot;dirichlet&quot;</span>,<span class="string">&quot;nullspace&quot;</span>}
+0073         out = <a href="../functions/finite_elements/femat_nullspace.html" class="code" title="function [B] = femat_nullspace(pts,tri)">femat_nullspace</a>(pts,tri);
+0074     <span class="keyword">case</span> <span class="string">&quot;orthobasis&quot;</span>
+0075         out = <a href="../functions/finite_elements/femat_orthobasis.html" class="code" title="function [B] = femat_orthobasis(pts,tri)">femat_orthobasis</a>(pts,tri);
+0076     <span class="keyword">case</span> <span class="string">&quot;potential&quot;</span>
+0077         out = <a href="#_sub1" class="code" title="subfunction [V] = femat_potential(pts,tri,scalarC)">femat_potential</a>(pts,tri,scalarC);
+0078     <span class="keyword">case</span> <span class="string">&quot;stiffness&quot;</span>
+0079         out = <a href="#_sub2" class="code" title="subfunction [K] = femat_stiffness(pts,tri,scalarC)">femat_stiffness</a>(pts,tri,scalarC);
+0080     <span class="keyword">case</span> <span class="string">&quot;surface&quot;</span>
+0081         out = <a href="#_sub3" class="code" title="subfunction [B] = femat_surface(pts,tri,scalarC,vectorC)">femat_surface</a>(pts,tri,scalarC,vectorC);
+0082     <span class="keyword">case</span> <span class="string">&quot;skew-vector&quot;</span>
+0083         out = <a href="#_sub4" class="code" title="subfunction [X] = femat_skew_vector(pts,tri,scalarC,vectorC)">femat_skew_vector</a>(pts,tri,scalarC,vectorC);
+0084     <span class="keyword">case</span> <span class="string">&quot;symm-vector&quot;</span>
+0085         out = <a href="#_sub5" class="code" title="subfunction [Z] = femat_symm_vector(pts,tri,scalarC,vectorC)">femat_symm_vector</a>(pts,tri,scalarC,vectorC);
+0086 <span class="keyword">end</span>
+0087 <span class="keyword">end</span>
+0088 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0089 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0090 
+0091 <span class="keyword">function</span><a name="_sub1" href="#_subfunctions" class="code"> [V] = femat_potential(pts,tri,scalarC)</a>
+0092 <span class="comment">% constructs the finite-element scalar-potential matrix</span>
+0093 <span class="keyword">arguments</span>
+0094     pts (:,:) double {mustBeFinite,mustBeReal}
+0095     tri (:,:) {mustBeInteger,mustBePositive}
+0096     scalarC double {mustBeFinite}
+0097 <span class="keyword">end</span>
+0098 [Ndim,Npts] = size(pts);
+0099 [Nvtx,Ntri] = size(tri);
+0100 
+0101 <span class="comment">% construct simplex coefficients</span>
+0102 scalarC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,scalarC);
+0103 
+0104 <span class="comment">% compute integrand values</span>
+0105 integrand = permute(scalarC,[3,4,1,2]);
+0106 
+0107 <span class="comment">% compute integration coefficients</span>
+0108 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0109 [intCoeff,ii,jj,kk] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,3);
+0110 ii_jj = sub2ind([Nvtx,Nvtx],ii,jj);
+0111 
+0112 <span class="comment">% loop over simplexes</span>
+0113 [rows,cols] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,2);
+0114 rows = tri(rows(:),:);
+0115 cols = tri(cols(:),:);
+0116 vals = zeros(size(rows));
+0117 
+0118 <span class="keyword">for</span> ss = 1:Ntri
+0119     int_ss = integrand(:,ss);
+0120     Vij = accumarray(ii_jj,intCoeff .* int_ss(kk,:));
+0121     vals(:,ss) = svol(ss) .* Vij(:);
+0122 <span class="keyword">end</span>
+0123 V = sparse(rows,cols,vals,Npts,Npts);
+0124 V = (V + V.')/2;
+0125 <span class="keyword">end</span>
+0126 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0127 
+0128 <span class="keyword">function</span><a name="_sub2" href="#_subfunctions" class="code"> [K] = femat_stiffness(pts,tri,scalarC)</a>
+0129 <span class="comment">% constructs the finite-element stiffness matrix</span>
+0130 <span class="keyword">arguments</span>
+0131     pts (:,:) double {mustBeFinite,mustBeReal}
+0132     tri (:,:) {mustBeInteger,mustBePositive}
+0133     scalarC double {mustBeFinite}
+0134 <span class="keyword">end</span>
+0135 [Ndim,Npts] = size(pts);
+0136 [Nvtx,Ntri] = size(tri);
+0137 
+0138 <span class="comment">% construct simplex coefficients</span>
+0139 baryvec = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,<a href="../functions/finite_elements/baryvectors.html" class="code" title="function [bvec] = baryvectors(pts,tri)">baryvectors</a>(pts,tri));
+0140 scalarC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,scalarC);
+0141 
+0142 <span class="comment">% compute integrand values</span>
+0143 [aa,bb,cc] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,3);
+0144 v_aa = baryvec(:,:,aa,:);
+0145 m_bb = scalarC(:,:,bb,:);
+0146 v_cc = baryvec(:,:,cc,:);
+0147 
+0148 <span class="keyword">if</span> isequal(size(m_bb,[1,2]),[Ndim,Ndim])
+0149     v_cc = permute(v_cc,[2,1,3,4]);
+0150     integrand = sum(v_aa .* m_bb .* v_cc,[1,2]);
+0151     integrand = permute(integrand,[3,4,1,2]);
+0152 <span class="keyword">else</span>
+0153     integrand = sum(v_aa .* m_bb .* v_cc,[1,2]);
+0154     integrand = permute(integrand,[3,4,1,2]);
+0155 <span class="keyword">end</span>
+0156 
+0157 <span class="comment">% compute integration coefficients</span>
+0158 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0159 [intCoeff,ii,jj,kk] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,3,[1 2]); <span class="comment">% integration coeffs ignoring ii and jj</span>
+0160 ii_jj = sub2ind([Nvtx,Nvtx],ii,jj);
+0161 ii_kk_jj = sub2ind([Nvtx,Nvtx,Nvtx],ii,kk,jj);
+0162 
+0163 <span class="comment">% loop over simplexes</span>
+0164 [rows,cols] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,2);
+0165 rows = tri(rows(:),:);
+0166 cols = tri(cols(:),:);
+0167 vals = zeros(size(rows));
+0168 
+0169 <span class="keyword">for</span> ss = 1:Ntri
+0170     int_ss = integrand(:,ss);
+0171     Kij = accumarray(ii_jj, intCoeff .* int_ss(ii_kk_jj,:));
+0172     vals(:,ss) = svol(ss) .* Kij(:);
+0173 <span class="keyword">end</span>
+0174 K = sparse(rows,cols,vals,Npts,Npts);
+0175 K = (K + K.')/2;
+0176 <span class="keyword">end</span>
+0177 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0178 
+0179 <span class="keyword">function</span><a name="_sub3" href="#_subfunctions" class="code"> [B] = femat_surface(pts,tri,scalarC,vectorC)</a>
+0180 <span class="comment">% constructs the finite-element surface integral matrix</span>
+0181 <span class="keyword">arguments</span>
+0182     pts (:,:) double {mustBeFinite,mustBeReal}
+0183     tri (:,:) {mustBeInteger,mustBePositive}
+0184     scalarC double {mustBeFinite}
+0185     vectorC double {mustBeFinite} = [];
+0186 <span class="keyword">end</span>
+0187 [Ndim,Npts] = size(pts);
+0188 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0189 
+0190 <span class="comment">% construct simplex coefficients</span>
+0191 bvec = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,<a href="../functions/finite_elements/baryvectors.html" class="code" title="function [bvec] = baryvectors(pts,tri)">baryvectors</a>(pts,tri));
+0192 scalarC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,scalarC);
+0193 
+0194 <span class="comment">% use baryvectors if vectorCoeff not given</span>
+0195 <span class="keyword">if</span> isempty(vectorC)
+0196     vectorC = bvec;
+0197     ignore = 2;
+0198 <span class="keyword">else</span>
+0199     vectorC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,vectorC);
+0200     ignore = [];
+0201 <span class="keyword">end</span>
+0202 
+0203 <span class="comment">% find simplices with faces on the domain boundary</span>
+0204 isbndnode = <a href="../functions/finite_elements/boundary_nodes.html" class="code" title="function [bnodes] = boundary_nodes(pts,tri)">boundary_nodes</a>(pts,tri);
+0205 isbndtri = sum(isbndnode(tri(1:Ndim+1,:)),1)==Ndim;
+0206 bndtri = tri(1:Ndim+1,isbndtri);
+0207 
+0208 <span class="comment">% reduce the coefficients to only include bounding simplexes</span>
+0209 svol = svol(:,isbndtri);
+0210 bvec = bvec(:,:,:,isbndtri);
+0211 scalarC = scalarC(:,:,:,isbndtri);
+0212 vectorC = vectorC(:,:,:,isbndtri);
+0213 
+0214 <span class="comment">% find boundary faces on a corner</span>
+0215 iscorner = (accumarray(tri(:),ones(numel(tri),1),[Npts,1])==1);
+0216 iscornertri = any(iscorner(bndtri),1);
+0217 cfaces = <a href="../functions/meshing/mesh_faces.html" class="code" title="function [faces] = mesh_faces(pts,tri)">mesh_faces</a>(pts,bndtri(:,iscornertri));
+0218 cfaces = cfaces(any(iscorner(cfaces),2)&amp;all(isbndnode(cfaces),2),:);
+0219 
+0220 <span class="comment">% find all other boundary faces</span>
+0221 bfaces = <a href="../functions/meshing/mesh_faces.html" class="code" title="function [faces] = mesh_faces(pts,tri)">mesh_faces</a>(pts,bndtri(:,~iscornertri));
+0222 bfaces = bfaces(all(isbndnode(bfaces),2),:);
+0223 
+0224 <span class="comment">% join faces and extract relevant coefficient values</span>
+0225 faces = [cfaces; bfaces].';
+0226 Nface = size(faces,2);
+0227 
+0228 <span class="comment">% find face areas/normals/coefficients</span>
+0229 f_vol = zeros(1,Nface);
+0230 f_scl = zeros([size(scalarC,[1,2]),[Ndim,Nface]]);
+0231 f_vec = zeros([size(vectorC,[1,2]),[Ndim,Nface]]);
+0232 f_norm = zeros(Ndim,1,1,Nface);
+0233 
+0234 <span class="keyword">for</span> ff = 1:Nface
+0235     <span class="comment">% find which vertices correspond to the face</span>
+0236     isFaceVtx = ismember(bndtri,faces(:,ff));
+0237     <span class="comment">% find which simplex contains the specified face</span>
+0238     val = find(sum(isFaceVtx,1)==Ndim);
+0239     <span class="keyword">if</span> numel(val)~=1
+0240         <span class="comment">% the valid simplex must also contain a corner node</span>
+0241         val = val(any(iscorner(bndtri(:,val)),1));
+0242     <span class="keyword">end</span>
+0243     <span class="comment">% populate face parameters</span>
+0244     f_vol(:,ff) = svol(:,val);
+0245     f_scl(:,:,:,ff) = scalarC(:,:,isFaceVtx(:,val),val);
+0246     f_vec(:,:,:,ff) = vectorC(:,:,isFaceVtx(:,val),val);
+0247     f_norm(:,:,:,ff) = -bvec(:,:,~isFaceVtx(:,val),val);
+0248 <span class="keyword">end</span>
+0249 f_area = 2 .* squeeze(vecnorm(f_norm,2,1)) .* f_vol;
+0250 f_norm = f_norm ./ vecnorm(f_norm,2,1);
+0251 
+0252 <span class="comment">% compute integrand values</span>
+0253 [aa,bb] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Ndim,2);
+0254 <span class="keyword">if</span> isequal(size(f_scl,[1,2]),[Ndim,Ndim])
+0255     f_vec = permute(f_vec,[2,1,3,4]);
+0256 <span class="keyword">end</span>
+0257 integrand = sum(f_norm .* f_scl(:,:,bb,:) .* f_vec(:,:,aa,:),[1,2]);
+0258 integrand = permute(integrand,[3,4,1,2]);
+0259 
+0260 <span class="comment">% compute integration coefficients</span>
+0261 [intCoeff,ii,jj,kk] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim-1,3,ignore);
+0262 ii_jj = sub2ind([Ndim,Ndim],ii,jj);
+0263 jj_kk = sub2ind([Ndim,Ndim],jj,kk);
+0264 
+0265 <span class="comment">% loop over faces</span>
+0266 [rows,cols] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Ndim,2);
+0267 rows = faces(rows,:);
+0268 cols = faces(cols,:);
+0269 vals = zeros(size(rows));
+0270 
+0271 <span class="keyword">for</span> ff = 1:Nface
+0272     int_ff = integrand(:,ff);
+0273     Bij = accumarray(ii_jj, intCoeff .* int_ff(jj_kk,:));
+0274     vals(:,ff) = f_area(ff) .* Bij(:);
+0275 <span class="keyword">end</span>
+0276 B = sparse(rows,cols,vals,Npts,Npts);
+0277 <span class="keyword">end</span>
+0278 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0279 
+0280 <span class="keyword">function</span><a name="_sub4" href="#_subfunctions" class="code"> [X] = femat_skew_vector(pts,tri,scalarC,vectorC)</a>
+0281 <span class="comment">% constructs the finite-element matrix for the complex-valued vector-potential operator (1st order)</span>
+0282 <span class="keyword">arguments</span>
+0283     pts (:,:) double {mustBeFinite,mustBeReal}
+0284     tri (:,:) {mustBeInteger,mustBePositive}
+0285     scalarC double {mustBeFinite}
+0286     vectorC double {mustBeFinite}
+0287 <span class="keyword">end</span>
+0288 [Ndim,Npts] = size(pts);
+0289 [Nvtx,Ntri] = size(tri);
+0290 
+0291 <span class="comment">% construct simplex coefficients</span>
+0292 baryvec = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,<a href="../functions/finite_elements/baryvectors.html" class="code" title="function [bvec] = baryvectors(pts,tri)">baryvectors</a>(pts,tri));
+0293 scalarC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,scalarC);
+0294 vectorC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,vectorC);
+0295 
+0296 <span class="comment">% compute integrand values</span>
+0297 [aa,bb,cc] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,3);
+0298 v_aa = baryvec(:,:,aa,:);
+0299 s_bb = scalarC(:,:,bb,:);
+0300 v_cc = vectorC(:,:,cc,:);
+0301 
+0302 <span class="keyword">if</span> isequal(size(s_bb,[1,2]),[Ndim,Ndim])
+0303     v_cc = permute(v_cc,[2,1,3,4]);
+0304 <span class="keyword">end</span>
+0305 integrand = sum(v_aa .* s_bb .* v_cc,[1,2]);
+0306 integrand = permute(integrand,[3,4,1,2]);
+0307 
+0308 <span class="comment">% compute integration coefficients</span>
+0309 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0310 int_ikl = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,4,2); <span class="comment">% integration coeffs ignoring jj</span>
+0311 int_jkl = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,4,1); <span class="comment">% integration coeffs ignoring ii</span>
+0312 
+0313 [~,ii,jj,kk,ll] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,4);
+0314 ii_jj = sub2ind([Nvtx,Nvtx],ii,jj);
+0315 ii_kk_ll = sub2ind([Nvtx,Nvtx,Nvtx],ii,kk,ll);
+0316 jj_kk_ll = sub2ind([Nvtx,Nvtx,Nvtx],jj,kk,ll);
+0317 
+0318 <span class="comment">% loop over simplexes</span>
+0319 [rows,cols] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,2);
+0320 rows = tri(rows(:),:);
+0321 cols = tri(cols(:),:);
+0322 vals = zeros(size(rows));
+0323 
+0324 <span class="keyword">for</span> ss = 1:Ntri
+0325     int_ss = integrand(:,ss);
+0326     Xij = accumarray(ii_jj,int_ikl .* int_ss(jj_kk_ll,:) - int_jkl .* int_ss(ii_kk_ll,:));
+0327     vals(:,ss) = svol(ss) .* Xij(:);
+0328 <span class="keyword">end</span>
+0329 X = sparse(rows,cols,vals,Npts,Npts);
+0330 X = (X - X.')/2;
+0331 <span class="keyword">end</span>
+0332 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0333 
+0334 <span class="keyword">function</span><a name="_sub5" href="#_subfunctions" class="code"> [Z] = femat_symm_vector(pts,tri,scalarC,vectorC)</a>
+0335 <span class="comment">% constructs the finite-element matrix for the real-valued vector-potential operator (2nd order)</span>
+0336 <span class="keyword">arguments</span>
+0337     pts (:,:) double {mustBeFinite,mustBeReal}
+0338     tri (:,:) {mustBeInteger,mustBePositive}
+0339     scalarC double {mustBeFinite}
+0340     vectorC double {mustBeFinite}
+0341 <span class="keyword">end</span>
+0342 [Ndim,Npts] = size(pts);
+0343 [Nvtx,Ntri] = size(tri);
+0344 
+0345 <span class="comment">% construct simplex coefficients</span>
+0346 scalarC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,scalarC);
+0347 vectorC = <a href="../functions/finite_elements/coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">coeff_expand</a>(pts,tri,vectorC);
+0348 
+0349 <span class="comment">% compute integrand values</span>
+0350 [aa,bb,cc] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,3);
+0351 v_aa = vectorC(:,:,aa,:);
+0352 s_bb = scalarC(:,:,bb,:);
+0353 v_cc = vectorC(:,:,cc,:);
+0354 
+0355 <span class="keyword">if</span> isequal(size(s_bb,[1,2]),[Ndim,Ndim])
+0356     v_cc = permute(v_cc,[2,1,3,4]);
+0357 <span class="keyword">end</span>
+0358 integrand = sum(v_aa .* s_bb .* v_cc,[1,2]);
+0359 integrand = permute(integrand,[3,4,1,2]);
+0360 
+0361 <span class="comment">% compute integration coefficients</span>
+0362 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0363 [intCoeff,ii,jj,kk,ll,mm] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,5);
+0364 ii_jj = sub2ind([Nvtx,Nvtx],ii,jj);
+0365 kk_ll_mm = sub2ind([Nvtx,Nvtx,Nvtx],kk,ll,mm);
+0366 
+0367 <span class="comment">% loop over simplexes</span>
+0368 [rows,cols] = <a href="../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Nvtx,2);
+0369 rows = tri(rows(:),:);
+0370 cols = tri(cols(:),:);
+0371 vals = zeros(size(rows));
+0372 
+0373 <span class="keyword">for</span> ss = 1:Ntri
+0374     int_ss = integrand(:,ss);
+0375     Zij = accumarray(ii_jj, intCoeff .* int_ss(kk_ll_mm,:));
+0376     vals(:,ss) = svol(ss) .* Zij(:);
+0377 <span class="keyword">end</span>
+0378 Z = sparse(rows,cols,vals,Npts,Npts);
+0379 Z = (Z + Z.')/2;
+0380 <span class="keyword">end</span>
+0381 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span></pre></div>
+</body>
+</html>

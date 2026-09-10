@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>to_basis.m</title>
+  <meta name="keywords" content="to_basis">
+  <meta name="description" content="Converts the inputted data into the specified basis.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; to_basis.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>to_basis
+</h1>
+<h3>Converts the inputted data into the specified basis.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [data] = to_basis(basis,data,shape,B) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Converts the inputted data into the specified basis. 
+ The inputted data can take the form of a matrix, or an array/pagearray containing
+ row or column vectors. The input &quot;B&quot; corresponds to the basis conversion
+ matrix for the desired transformation.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="FE_init.html" class="code" title="function [K,V,M,B,muE,muB,muZ] = FE_init(pts,tri,massCoeff,bandCoeff,basis)">FE_init</a>	<a>Computes all components of the finite-element Hamiltonian in the specified basis.</a></li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/dropping/drop_distance.html" class="code" title="function [H] = drop_distance(H,pts,tri,max_dist)">drop_distance</a>	<a>Drops elements from the Hamiltonian using a distance-based criterion</a></li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/dropping/drop_neighbor.html" class="code" title="function [H] = drop_neighbor(H,pts,tri,max_edge)">drop_neighbor</a>	<a>Drops elements from the Hamiltonian using a connection-based criterion</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [data] = to_basis(basis,data,shape,B)</a>
+0002 <span class="comment">% Converts the inputted data into the specified basis.</span>
+0003 <span class="comment">% The inputted data can take the form of a matrix, or an array/pagearray containing</span>
+0004 <span class="comment">% row or column vectors. The input &quot;B&quot; corresponds to the basis conversion</span>
+0005 <span class="comment">% matrix for the desired transformation.</span>
+0006 <span class="keyword">arguments</span>
+0007     basis string {mustBeMember(basis,[<span class="string">&quot;full&quot;</span>,<span class="string">&quot;orth&quot;</span>,<span class="string">&quot;sparse&quot;</span>])}
+0008     data double {mustBeFinite}
+0009     shape string {mustBeMember(shape,[<span class="string">&quot;row&quot;</span>,<span class="string">&quot;col&quot;</span>,<span class="string">&quot;mat&quot;</span>])}
+0010     B (:,:) double {mustBeFinite}
+0011 <span class="keyword">end</span>
+0012 ismat = (shape==<span class="string">&quot;mat&quot;</span>);
+0013 isrow = (shape==<span class="string">&quot;row&quot;</span>);
+0014 iscol = (shape==<span class="string">&quot;col&quot;</span>);
+0015 
+0016 <span class="comment">% ensure Q_rows &gt; Q_cols</span>
+0017 <span class="keyword">if</span> size(B,1) &lt; size(B,2); B=B.'; <span class="keyword">end</span>
+0018 [Bmax, Bmin] = size(B);
+0019 
+0020 <span class="comment">% check size of input</span>
+0021 <span class="keyword">if</span> ismat
+0022     <span class="keyword">if</span> ~ismatrix(data) || size(data,1)~=size(data,2)
+0023         error(<span class="string">&quot;ERROR: input is not a square matrix&quot;</span>)
+0024     <span class="keyword">elseif</span> ~(all(size(data)==Bmax) || all(size(data)==Bmin))
+0025         error(<span class="string">&quot;ERROR: the size of the input matrix does not agree with the basis-conversion matrix&quot;</span>);
+0026     <span class="keyword">end</span>
+0027 <span class="keyword">elseif</span> isrow &amp;&amp; ~ismember(size(data,2),[Bmax,Bmin])
+0028     error(<span class="string">&quot;ERROR: the size of the inputted row-vector does not agree with the basis-conversion matrix&quot;</span>);
+0029 <span class="keyword">elseif</span> iscol &amp;&amp; ~ismember(size(data,1),[Bmax,Bmin])
+0030     error(<span class="string">&quot;ERROR: the size of the inputted column-vector does not agree with the basis-conversion matrix&quot;</span>);
+0031 <span class="keyword">end</span>
+0032 
+0033 <span class="comment">% check if data is already in the correct basis</span>
+0034 <span class="keyword">if</span> basis==<span class="string">&quot;full&quot;</span>
+0035     <span class="keyword">if</span> ismat &amp;&amp; all(size(data)==Bmax); <span class="keyword">return</span>; <span class="keyword">end</span>
+0036     <span class="keyword">if</span> isrow &amp;&amp; (size(data,2)==Bmax); <span class="keyword">return</span>; <span class="keyword">end</span>
+0037     <span class="keyword">if</span> iscol &amp;&amp; (size(data,1)==Bmax); <span class="keyword">return</span>; <span class="keyword">end</span>
+0038 <span class="keyword">elseif</span> ismember(basis,[<span class="string">&quot;orth&quot;</span>,<span class="string">&quot;sparse&quot;</span>])
+0039     <span class="keyword">if</span> ismat &amp;&amp; all(size(data)==Bmin); <span class="keyword">return</span>; <span class="keyword">end</span>
+0040     <span class="keyword">if</span> isrow &amp;&amp; (size(data,2)==Bmin); <span class="keyword">return</span>; <span class="keyword">end</span>
+0041     <span class="keyword">if</span> iscol &amp;&amp; (size(data,1)==Bmin); <span class="keyword">return</span>; <span class="keyword">end</span>
+0042 <span class="keyword">end</span>
+0043 
+0044 <span class="comment">% determine if data is a pagearray</span>
+0045 ispage = (ndims(data)==3 &amp; all(size(data)~=0));
+0046 
+0047 <span class="keyword">if</span> ismat
+0048     <span class="comment">% check symmetry</span>
+0049     herm = ishermitian(data) - ishermitian(data,<span class="string">&quot;skew&quot;</span>);
+0050     symm = issymmetric(data) - issymmetric(data,<span class="string">&quot;skew&quot;</span>);
+0051 <span class="keyword">end</span>
+0052 
+0053 <span class="comment">% convert to basis</span>
+0054 <span class="keyword">switch</span> basis
+0055     <span class="keyword">case</span> <span class="string">&quot;full&quot;</span>
+0056         <span class="comment">% convert</span>
+0057         <span class="keyword">if</span> ismat
+0058             data = ((B.') \ data / B);
+0059         <span class="keyword">elseif</span> iscol &amp;&amp; ispage
+0060             data = pagemtimes(B,data);
+0061         <span class="keyword">elseif</span> iscol &amp; ~ispage
+0062             data = B * data;
+0063         <span class="keyword">elseif</span> isrow &amp; ispage
+0064             data = pagemtimes(data,B);
+0065         <span class="keyword">elseif</span> isrow &amp; ~ispage
+0066             data = data * B;
+0067         <span class="keyword">end</span>
+0068 
+0069     <span class="keyword">case</span> <span class="string">&quot;orth&quot;</span>
+0070         data = full(data);
+0071         B = full(B);
+0072 
+0073         <span class="comment">% convert</span>
+0074         <span class="keyword">if</span> ismat
+0075             data = (B.' * data * B);
+0076         <span class="keyword">elseif</span> iscol &amp; ispage
+0077             data = pagemtimes(inv(B),data);
+0078         <span class="keyword">elseif</span> iscol &amp; ~ispage
+0079             data = B \ data;
+0080         <span class="keyword">elseif</span> isrow &amp; ispage
+0081             data = pagemtimes(data,inv(B));
+0082         <span class="keyword">elseif</span> isrow &amp; ~ispage
+0083             data = data / B;
+0084         <span class="keyword">end</span>
+0085 
+0086     <span class="keyword">case</span> <span class="string">&quot;sparse&quot;</span>
+0087         <span class="comment">% convert</span>
+0088         <span class="keyword">if</span> ismat
+0089             data = (B.' * data * B);
+0090         <span class="keyword">elseif</span> iscol &amp; ispage
+0091             data = pagemtimes(B.',data);
+0092         <span class="keyword">elseif</span> iscol &amp; ~ispage
+0093             data = B.' * data;
+0094         <span class="keyword">elseif</span> isrow &amp; ispage
+0095             data = pagemtimes(data, B.');
+0096         <span class="keyword">elseif</span> isrow &amp; ~ispage
+0097             data = data * B.';
+0098         <span class="keyword">end</span>
+0099 <span class="keyword">end</span>
+0100 
+0101 <span class="comment">% restore matrix symmetry</span>
+0102 <span class="keyword">if</span> ismat
+0103     <span class="keyword">if</span> herm==0 &amp; symm==0
+0104         <span class="comment">% no symmetries</span>
+0105     <span class="keyword">elseif</span> herm==-1
+0106         <span class="comment">% skew hermitian</span>
+0107         data = (data - data')/2;
+0108     <span class="keyword">elseif</span> herm==+1
+0109         <span class="comment">% hermitian</span>
+0110         data = (data + data')/2;
+0111     <span class="keyword">elseif</span> symm==-1
+0112         <span class="comment">% skew symmetric</span>
+0113         data = (data - data.')/2;
+0114     <span class="keyword">elseif</span> symm==+1
+0115         <span class="comment">% symmetric</span>
+0116         data = (data + data.')/2;
+0117     <span class="keyword">end</span>
+0118 <span class="keyword">end</span>
+0119 <span class="comment">% done</span>
+0120 <span class="keyword">end</span></pre></div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>atomic_units.m</title>
+  <meta name="keywords" content="atomic_units">
+  <meta name="description" content="Returns the specified SI unit in terms of Hartree atomic units.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; atomic_units.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>atomic_units
+</h1>
+<h3>Returns the specified SI unit in terms of Hartree atomic units.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [out] = atomic_units(unit_name) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns the specified SI unit in terms of Hartree atomic units.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [out] = atomic_units(unit_name)</a>
+0002 <span class="comment">% Returns the specified SI unit in terms of Hartree atomic units.</span>
+0003 <span class="keyword">arguments</span>
+0004     unit_name string {mustBeMember(unit_name, <span class="keyword">...</span>
+0005         [<span class="string">&quot;meters&quot;</span>,<span class="string">&quot;seconds&quot;</span>,<span class="string">&quot;joules&quot;</span>,<span class="string">&quot;eV&quot;</span>,<span class="string">&quot;grams&quot;</span>,<span class="string">&quot;newtons&quot;</span>,<span class="string">&quot;volts&quot;</span>,<span class="string">&quot;tesla&quot;</span>])}
+0006 <span class="keyword">end</span>
+0007 
+0008 <span class="comment">% base units needed for Hartree</span>
+0009 ee = 1.602176634e-19; <span class="comment">% coulombs</span>
+0010 hb = 1.054571818e-34; <span class="comment">% joule-seconds</span>
+0011 me = 9.109383702e-31; <span class="comment">% kilograms</span>
+0012 a0 = 5.291772109e-11; <span class="comment">% meters</span>
+0013 Eh = 4.359744722e-18; <span class="comment">% joules</span>
+0014 
+0015 <span class="comment">% other constants</span>
+0016 cc = 2.9979245800e+08; <span class="comment">% speed of light</span>
+0017 aa = 7.2973525643e-03; <span class="comment">% fine-structure constant</span>
+0018 kB = 1.3806490000e-23; <span class="comment">% boltzman constant</span>
+0019 
+0020 <span class="keyword">switch</span> unit_name
+0021     <span class="keyword">case</span> <span class="string">&quot;meters&quot;</span>;  out = 1/a0;
+0022     <span class="keyword">case</span> <span class="string">&quot;seconds&quot;</span>; out = Eh/hb;
+0023     <span class="keyword">case</span> <span class="string">&quot;joules&quot;</span>;  out = 1/Eh;
+0024     <span class="keyword">case</span> <span class="string">&quot;eV&quot;</span>;      out = ee/Eh;
+0025     <span class="keyword">case</span> <span class="string">&quot;grams&quot;</span>;   out = 1e-3/me;
+0026     <span class="keyword">case</span> <span class="string">&quot;newtons&quot;</span>; out = a0/Eh;
+0027     <span class="keyword">case</span> <span class="string">&quot;volts&quot;</span>;   out = ee/Eh;
+0028     <span class="keyword">case</span> <span class="string">&quot;tesla&quot;</span>;   out = a0^2 * ee/hb;
+0029 <span class="keyword">end</span>
+0030 <span class="keyword">end</span></pre></div>
+</body>
+</html>

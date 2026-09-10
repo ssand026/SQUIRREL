@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>expval.m</title>
+  <meta name="keywords" content="expval">
+  <meta name="description" content="Compute the expectation values for the arrays/pagearrays of bra/kets">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">misc</a> &gt; expval.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/misc&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>expval
+</h1>
+<h3>Compute the expectation values for the arrays/pagearrays of bra/kets</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [out] = expval(bra,op,ket) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Compute the expectation values for the arrays/pagearrays of bra/kets</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="expval.html" class="code" title="function [out] = expval(bra,op,ket)">expval</a> Compute the expectation values for the arrays/pagearrays of bra/kets</li>
+</ul>
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="expval.html" class="code" title="function [out] = expval(bra,op,ket)">expval</a>	<a>Compute the expectation values for the arrays/pagearrays of bra/kets</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [out] = expval(bra,op,ket)</a>
+0002 <span class="comment">% Compute the expectation values for the arrays/pagearrays of bra/kets</span>
+0003 <span class="keyword">arguments</span>
+0004     bra (:,:,:) double {mustBeFinite}
+0005     op  (:,:)   double {mustBeFinite}
+0006     ket (:,:,:) double {mustBeFinite}
+0007 <span class="keyword">end</span>
+0008 Nb = ndims(bra);
+0009 Nk = ndims(ket);
+0010 Nd = max(size(bra,3),size(ket,3));
+0011 
+0012 <span class="keyword">if</span> ~isscalar(op)
+0013     <span class="keyword">if</span> isempty(op)
+0014         <span class="comment">% no value was given for the operator</span>
+0015         op = 1;
+0016     <span class="keyword">elseif</span> size(op,1)~=size(bra,2) | size(op,2)~=size(ket,1)
+0017         <span class="comment">% the operator does not commute with the bra/ket</span>
+0018         error(<span class="string">&quot;ERROR: sizes of the operator and the bra/ket do not commute&quot;</span>)
+0019     <span class="keyword">elseif</span> isdiag(op) &amp;&amp; all(abs(diag(op)-op(1,1)) &lt;= 2*eps(op(1,1)))
+0020         <span class="comment">% the operator is an identity matrix</span>
+0021         op = op(1,1);
+0022     <span class="keyword">end</span>
+0023 <span class="keyword">end</span>
+0024 
+0025 <span class="comment">% initialize output</span>
+0026 out = zeros(size(bra,1),size(ket,2),Nd);
+0027 
+0028 <span class="comment">% check if operator is zero-valued</span>
+0029 <span class="keyword">if</span> all(op==0)
+0030     <span class="keyword">return</span>
+0031 <span class="keyword">end</span>
+0032 
+0033 <span class="comment">% compute the expectation values</span>
+0034 <span class="keyword">if</span> Nb==2 &amp; Nk==2 
+0035     <span class="comment">% bra and ket are matrices</span>
+0036     out = bra * op * ket;
+0037 <span class="keyword">elseif</span> (Nb==2 &amp; Nk==3)
+0038     <span class="comment">% ket is a pagearray</span>
+0039     bra = bra * op;
+0040     <span class="keyword">for</span> jj = 1:size(ket,3)
+0041         out(:,:,jj) = bra * ket(:,:,jj);
+0042     <span class="keyword">end</span>
+0043 <span class="keyword">elseif</span> (Nb==3 &amp; Nk==2) 
+0044     <span class="comment">% bra is a pagearray</span>
+0045     ket = op * ket;
+0046     <span class="keyword">for</span> jj = 1:size(bra,3)
+0047         out(:,:,jj) = bra(:,:,jj) * ket;
+0048     <span class="keyword">end</span>
+0049 <span class="keyword">elseif</span> (Nb==3 &amp; Nk==3) 
+0050     <span class="comment">% bra and ket are pagearrays</span>
+0051     <span class="keyword">if</span> size(bra,3)~=Nd | size(ket,3)~=Nd
+0052         error(<span class="string">&quot;ERROR: bra and ket have a different number of pages&quot;</span>)
+0053     <span class="keyword">end</span>
+0054     <span class="keyword">for</span> jj = 1:Nd
+0055         out(:,:,jj) = bra(:,:,jj) * op * ket(:,:,jj);
+0056     <span class="keyword">end</span>
+0057 <span class="keyword">else</span>
+0058     <span class="comment">% bra and kets have invalid sizes</span>
+0059     error(<span class="string">&quot;ERROR: <a href="expval.html" class="code" title="function [out] = expval(bra,op,ket)">expval</a> not available <span class="keyword">for</span> given inputs&quot;</span>)
+0060 <span class="keyword">end</span>
+0061 <span class="keyword">end</span></pre></div>
+</body>
+</html>

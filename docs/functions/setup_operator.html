@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>setup_operator.m</title>
+  <meta name="keywords" content="setup_operator">
+  <meta name="description" content="Returns a function that converts the scalar coefficient into its operator form.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; setup_operator.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>setup_operator
+</h1>
+<h3>Returns a function that converts the scalar coefficient into its operator form.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [convertFunc] = setup_operator(pts,tri) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns a function that converts the scalar coefficient into its operator form.</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a> Computes the barycentric integral coefficients</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a> (memoized) computes the hypervolume of each simplex in the mesh</li>
+</ul>
+<h2>This function is called by: </h2>
+
+<h2><a name="_subfunctions"></a>Subfunctions: </h2>
+<div class="box"><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [V] = conversion_func(coeff)</a></li></ul></div>
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [convertFunc] = setup_operator(pts,tri)</a>
+0002 <span class="comment">% Returns a function that converts the scalar coefficient into its operator form.</span>
+0003 <span class="keyword">arguments</span>
+0004     pts (:,:) double {mustBeFinite,mustBeReal}
+0005     tri (:,:) {mustBeInteger,mustBePositive}
+0006 <span class="keyword">end</span>
+0007 [Ndim,Npts] = size(pts);
+0008 [Nvtx,Ntri] = size(tri);
+0009 
+0010 <span class="comment">% compute integral coefficients</span>
+0011 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0012 [intCoeff,ii,jj,kk] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,3);
+0013 int_ijk = intCoeff .* svol;
+0014 t_ii = tri(ii,:);
+0015 t_jj = tri(jj,:);
+0016 t_kk = tri(kk,:);
+0017 
+0018 <span class="comment">% pass reference to the conversion function</span>
+0019 convertFunc = @<a href="#_sub1" class="code" title="subfunction [V] = conversion_func(coeff)">conversion_func</a>;
+0020 <span class="comment">%-----------------------------------------------------------</span>
+0021     <span class="keyword">function</span> [V] = <a href="#_sub1" class="code" title="subfunction [V] = conversion_func(coeff)">conversion_func</a>(coeff)
+0022     <span class="comment">% reshape the input coeff</span>
+0023     coeff = squeeze(coeff);
+0024     <span class="keyword">if</span> isequal(size(coeff),[Npts,1]) || isequal(size(coeff),[1,Npts])
+0025         coeff = coeff(t_kk);
+0026     <span class="keyword">elseif</span> isequal(size(coeff),[Ndim+1,Ntri])
+0027         coeff = coeff(kk,:);
+0028     <span class="keyword">elseif</span> isequal(size(coeff),[Ntri,Ndim+1])
+0029         coeff = coeff(:,kk).';
+0030     <span class="keyword">else</span>
+0031         error(<span class="string">&quot;ERROR: input coefficient has invalid size&quot;</span>)
+0032     <span class="keyword">end</span>
+0033     <span class="comment">% convert to operator</span>
+0034     Vij = sparse(t_ii, t_jj, int_ijk .* coeff, Npts, Npts);
+0035     V = (Vij + Vij')/2;
+0036     <span class="keyword">end</span>
+0037 <span class="comment">%-----------------------------------------------------------</span>
+0038 <span class="keyword">end</span></pre></div>
+</body>
+</html>

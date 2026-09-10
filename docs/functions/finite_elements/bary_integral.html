@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>bary_integral.m</title>
+  <meta name="keywords" content="bary_integral">
+  <meta name="description" content="Computes the barycentric integral coefficients">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">finite_elements</a> &gt; bary_integral.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/finite_elements&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>bary_integral
+</h1>
+<h3>Computes the barycentric integral coefficients</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Computes the barycentric integral coefficients
+ 
+ The output depends on the number of spatial dimensions and the total number of 
+ integration terms. The optional argument &quot;ignore&quot; will exclude the corresponding 
+ barycoordinate from the integral.</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a> For a set containing "n" distinct elements, return all possible permutations of length "k"</li>
+</ul>
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>	<a>Returns the specified finite-element matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="femat_overlap.html" class="code" title="function [M] = femat_overlap(pts,tri)">femat_overlap</a>	<a>(memoized) Returns the finite-element overlap matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/setup_operator.html" class="code" title="function [convertFunc] = setup_operator(pts,tri)">setup_operator</a>	<a>Returns a function that converts the scalar coefficient into its operator form.</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/setup_poisson.html" class="code" title="function [poissFunc] = setup_poisson(pts,tri,epsCoeff,opt)">setup_poisson</a>	<a>Initializes the solver for the Poisson equation.</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)</a>
+0002 <span class="comment">% Computes the barycentric integral coefficients</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% The output depends on the number of spatial dimensions and the total number of</span>
+0005 <span class="comment">% integration terms. The optional argument &quot;ignore&quot; will exclude the corresponding</span>
+0006 <span class="comment">% barycoordinate from the integral.</span>
+0007 <span class="keyword">arguments</span>
+0008     Ndim  (1,1) double {mustBeInteger,mustBeNonnegative}
+0009     Nterm (1,1) double {mustBeInteger,mustBePositive}
+0010     ignore (1,:) double {mustBeInteger,mustBePositive} = [];
+0011 <span class="keyword">end</span>
+0012 
+0013 <span class="comment">% construct the indices of the tensor</span>
+0014 index = <a href="../../functions/misc/npermsk.html" class="code" title="function [varargout] = npermsk(n,k)">npermsk</a>(Ndim+1,Nterm);
+0015 Nrows = size(index,1);
+0016 
+0017 <span class="comment">% push barycoord indices to the output</span>
+0018 varargout = cell(1,nargout-1);
+0019 <span class="keyword">for</span> jj = 1:nargout-1
+0020     varargout{jj} = index(:,jj);
+0021 <span class="keyword">end</span>
+0022 
+0023 <span class="comment">% remove any ignored terms from the index</span>
+0024 inPoly = [1:Nterm];
+0025 <span class="keyword">if</span> ~isempty(ignore)
+0026     inPoly(any(inPoly==ignore(:),1)) = [];
+0027 <span class="keyword">end</span>
+0028 index = index(:,inPoly);
+0029 polyDeg = length(inPoly);
+0030 
+0031 <span class="comment">% check if integral coefficients are uniform</span>
+0032 <span class="keyword">if</span> polyDeg &lt; 2
+0033     intCoeffs = ones(Nrows,1) / factorial(Ndim + polyDeg); 
+0034     <span class="keyword">return</span>
+0035 <span class="keyword">end</span>
+0036 
+0037 <span class="comment">% extract barycoord powers and compute coefficients</span>
+0038 <span class="comment">%----------------------------------------------------------</span>
+0039 sorted = sort(index,2);       <span class="comment">% sorted list of barycoord indices</span>
+0040 gamma = cumprod([1:Nterm].'); <span class="comment">% precompute the factorial values</span>
+0041 exponents = ones(Nrows,1);
+0042 intCoeffs = ones(Nrows,1);
+0043 
+0044 <span class="comment">% loop over indices</span>
+0045 <span class="keyword">for</span> kk = 2:polyDeg
+0046     <span class="comment">% check entries where the referenced barycoord has changed</span>
+0047     isDiff = (sorted(:,kk-1)~=sorted(:,kk)); 
+0048 
+0049     <span class="comment">% apply changed exponents to intCoeff, then update the exponents</span>
+0050     intCoeffs(isDiff) = intCoeffs(isDiff) .* gamma(exponents(isDiff)); 
+0051     exponents = (~isDiff .* exponents) + 1;
+0052 <span class="keyword">end</span>
+0053 intCoeffs = intCoeffs .* gamma(exponents);
+0054 
+0055 <span class="comment">% apply overall factor</span>
+0056 intCoeffs = factorial(Ndim) .* intCoeffs / factorial(Ndim + polyDeg);
+0057 <span class="keyword">end</span>
+0058</pre></div>
+</body>
+</html>

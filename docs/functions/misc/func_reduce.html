@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>func_reduce.m</title>
+  <meta name="keywords" content="func_reduce">
+  <meta name="description" content="Reduces or evaluates a function using the set of inputs &quot;var_list&quot;">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">misc</a> &gt; func_reduce.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/misc&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>func_reduce
+</h1>
+<h3>Reduces or evaluates a function using the set of inputs &quot;var_list&quot;</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [f_result,f_string,f_inputs,didEval] = func_reduce(func, var_list, opt) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Reduces or evaluates a function using the set of inputs &quot;var_list&quot;
+ 
+ Passes the defined variables in var_list into the inputted function and 
+ attempts to evaluate the function body. If unable to evaluate, returns the 
+ reduced expression for the function.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>	<a>Evaluates the input as a finite-element coefficient.</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [f_result,f_string,f_inputs,didEval] = func_reduce(func, var_list, opt)</a>
+0002 <span class="comment">% Reduces or evaluates a function using the set of inputs &quot;var_list&quot;</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% Passes the defined variables in var_list into the inputted function and</span>
+0005 <span class="comment">% attempts to evaluate the function body. If unable to evaluate, returns the</span>
+0006 <span class="comment">% reduced expression for the function.</span>
+0007 <span class="keyword">arguments</span>
+0008     func {mustBeA(func,{<span class="string">'function_handle'</span>,<span class="string">'char'</span>,<span class="string">'string'</span>})}
+0009 <span class="keyword">end</span>
+0010 <span class="keyword">arguments</span> (Repeating)
+0011     var_list (1,:) cell
+0012 <span class="keyword">end</span>
+0013 <span class="keyword">arguments</span>
+0014     opt.varName (1,1) string = <span class="string">&quot;input&quot;</span>;
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="comment">% check validity of var_list</span>
+0018 <span class="keyword">if</span> numel(var_list)==1 &amp;&amp; iscell(var_list{1})
+0019     var_list = var_list{1};
+0020 <span class="keyword">end</span>
+0021 
+0022 <span class="keyword">if</span> ~all(cellfun(@numel,var_list)==2)
+0023     error(<span class="string">&quot;ERROR: the input var_list has an invalid size&quot;</span>)
+0024 <span class="keyword">elseif</span> ~all(cellfun(@(x) isStringScalar(x{1}), var_list))
+0025     error(<span class="string">&quot;ERROR: the first <span class="keyword">arguments</span> of var_list must be a string scalar&quot;</span>)
+0026 <span class="keyword">end</span>
+0027 
+0028 <span class="comment">% extract the argument names/values from var_list</span>
+0029 var_names = strings(1,numel(var_list));
+0030 var_value = cell(1,numel(var_list));
+0031 <span class="keyword">for</span> jj = 1:numel(var_list)
+0032     var_names(jj) = var_list{jj}{1};
+0033     var_value{jj} = var_list{jj}{2};
+0034 <span class="keyword">end</span>
+0035 <span class="comment">% check for repeats</span>
+0036 [~,indx] = unique(var_names);
+0037 var_names = var_names(indx);
+0038 var_value = var_value(indx);
+0039 
+0040 <span class="comment">% append any internalized workspace variables to the input args</span>
+0041 <span class="keyword">if</span> isa(func,<span class="string">'function_handle'</span>)
+0042     f_work = functions(func).workspace{1};
+0043     work_names = string(fieldnames(f_work)).';
+0044     work_value = struct2cell(f_work).';
+0045 
+0046     <span class="comment">% add or replace input arguments, with priority given to workspace vars</span>
+0047     <span class="keyword">for</span> ii = 1:numel(work_names)
+0048         istaken = (work_names(ii)==var_names);
+0049         <span class="keyword">if</span> any(istaken)
+0050             var_value(istaken) = work_value{ii};
+0051         <span class="keyword">else</span>
+0052             var_names = [var_names, work_names(ii)];
+0053             var_value = [var_value, work_value{ii}];
+0054         <span class="keyword">end</span>
+0055     <span class="keyword">end</span>
+0056 <span class="keyword">end</span>
+0057 
+0058 <span class="comment">% convert function to string</span>
+0059 <span class="keyword">if</span> isa(func,<span class="string">'function_handle'</span>)
+0060     f_string = string(functions(func).function);
+0061 <span class="keyword">else</span>
+0062     f_string = string(func);
+0063 <span class="keyword">end</span>
+0064 f_string = regexprep(f_string,<span class="string">&quot;\s*&quot;</span>,&quot;&quot;);
+0065 
+0066 <span class="comment">% extract possible valid variable names from the function body</span>
+0067 f_body = regexp(f_string,<span class="string">&quot;(?&lt;=@\([^)]+\)).*&quot;</span>,<span class="string">&quot;match&quot;</span>);
+0068 [f_vars,f_notvar] = regexp(f_body,<span class="string">&quot;([a-z_A-Z]+(\d+|))+&quot;</span>,<span class="string">&quot;match&quot;</span>,<span class="string">&quot;split&quot;</span>);
+0069 
+0070 <span class="comment">% find variables in the function body that are defined by var_list</span>
+0071 def_vars = intersect(f_vars,var_names);
+0072 
+0073 <span class="comment">% find variables in the function body that are not defined or built-in/existing functions</span>
+0074 undef_vars = setdiff(f_vars,def_vars);
+0075 isafunc = arrayfun(@(var) any(exist(var)==[2,3,5]), undef_vars);
+0076 undef_vars = undef_vars(~isafunc);
+0077 
+0078 <span class="comment">% replace any defined variables with an index into the cell array f_inputs</span>
+0079 <span class="keyword">if</span> ~isempty(def_vars)
+0080     input_value = cell(1,numel(def_vars));
+0081     <span class="keyword">for</span> ii = 1:numel(def_vars)
+0082         f_vars(f_vars==def_vars(ii)) = opt.varName+<span class="string">&quot;{&quot;</span>+ii+<span class="string">&quot;}&quot;</span>;
+0083         input_value{ii} = var_value{var_names==def_vars(ii)};
+0084     <span class="keyword">end</span>
+0085     <span class="comment">% rejoin function body</span>
+0086     f_body = f_notvar(1) + join(reshape([f_vars; f_notvar(2:<span class="keyword">end</span>)],1,[]),&quot;&quot;);
+0087 <span class="keyword">end</span>
+0088 
+0089 <span class="comment">% return the outputs</span>
+0090 <span class="keyword">if</span> isempty(f_body)
+0091     <span class="comment">% the function does not have a valid form</span>
+0092     f_string = &quot;&quot;;
+0093     f_inputs = [];
+0094     f_result = NaN;
+0095     didEval = false;
+0096 <span class="keyword">elseif</span> isempty(def_vars) &amp; isempty(undef_vars)
+0097     <span class="comment">% the function requires no arguments for evaluation</span>
+0098     f_string = <span class="string">&quot;@(~) &quot;</span> + f_body;
+0099     f_inputs = [];
+0100     f_result = feval(str2func(f_string));
+0101     didEval = true;
+0102 <span class="keyword">elseif</span> ~isempty(def_vars) &amp; isempty(undef_vars)
+0103     <span class="comment">% all of the required arguments have been defined</span>
+0104     f_string = <span class="string">&quot;@(&quot;</span> + opt.varName + <span class="string">&quot;) &quot;</span> + f_body;
+0105     f_inputs = input_value;
+0106     f_result = feval(str2func(f_string),input_value);
+0107     didEval = true;
+0108 <span class="keyword">elseif</span> ~isempty(def_vars) &amp; ~isempty(undef_vars)
+0109     <span class="comment">% some of the required arguments have been defined</span>
+0110     f_string = <span class="string">&quot;@(&quot;</span> + join([opt.varName,undef_vars],<span class="string">&quot;,&quot;</span>) + <span class="string">&quot;) &quot;</span> + f_body;
+0111     f_inputs = input_value;
+0112     f_result = [];
+0113     didEval = false;    
+0114 <span class="keyword">elseif</span> isempty(def_vars) &amp; ~isempty(undef_vars)
+0115     <span class="comment">% none of the required arguments have been defined</span>
+0116     f_string = <span class="string">&quot;@(&quot;</span> + join(undef_vars,<span class="string">&quot;,&quot;</span>) + <span class="string">&quot;) &quot;</span> + f_body;
+0117     f_inputs = [];
+0118     f_result = [];
+0119     didEval = false;
+0120 <span class="keyword">end</span>
+0121 <span class="comment">% done</span>
+0122 <span class="keyword">end</span></pre></div>
+</body>
+</html>

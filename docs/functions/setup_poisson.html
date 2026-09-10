@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>setup_poisson.m</title>
+  <meta name="keywords" content="setup_poisson">
+  <meta name="description" content="Initializes the solver for the Poisson equation.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; setup_poisson.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>setup_poisson
+</h1>
+<h3>Initializes the solver for the Poisson equation.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [poissFunc] = setup_poisson(pts,tri,epsCoeff,opt) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Initializes the solver for the Poisson equation.
+ 
+ INPUTS:
+    pts: node locations, each column stores the coordinates for a particular node
+    tri: triangulation, each column stores the node-indices for a particular simplex
+    epsCoeff: coefficient representing the scalar/tensor field
+    method (optional): method to use for the poisson solver
+
+ OUTPUTS:
+    poissFunc: returns the coefficients of the scalar field that solves the
+    Poisson equation. Use the syntax:
+        - v = poissFunc(&quot;rho&quot;,rhoCoeff):    for a known charge density
+        - v = q*poissFunc(&quot;psi&quot;,psiCoeff):    for a set of wavefunctions with charge q
+
+ SEE ALSO: <a href="FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEMAT</a>, SETUP_LINSOLVE, SETUP_LITSOLVE</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a> Returns the specified finite-element matrix</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a> Computes the barycentric integral coefficients</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a> (memoized) computes the hypervolume of each simplex in the mesh</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/misc/setup_linsolve.html" class="code" title="function [solverFunc] = setup_linsolve(A,dim,method)">setup_linsolve</a> Returns a function for solving the system of linear equations A*x = b.</li>
+</ul><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="../functions/misc/setup_litsolve.html" class="code" title="function [solverFunc] = setup_litsolve(A,dim,opt)">setup_litsolve</a> Returns a function for iteratively solving a system of linear equations.</li>
+</ul>
+<h2>This function is called by: </h2>
+
+<h2><a name="_subfunctions"></a>Subfunctions: </h2>
+<div class="box"><ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [out] = rvec_from_rho(rho)</a></li><li><a href="#_sub2" class="code">function [out] = rvec_from_psi(psi)</a></li><li><a href="#_sub3" class="code">function [v_ee] = compute_potential(data_type, data_val)</a></li></ul></div>
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [poissFunc] = setup_poisson(pts,tri,epsCoeff,opt)</a>
+0002 <span class="comment">% Initializes the solver for the Poisson equation.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% INPUTS:</span>
+0005 <span class="comment">%    pts: node locations, each column stores the coordinates for a particular node</span>
+0006 <span class="comment">%    tri: triangulation, each column stores the node-indices for a particular simplex</span>
+0007 <span class="comment">%    epsCoeff: coefficient representing the scalar/tensor field</span>
+0008 <span class="comment">%    method (optional): method to use for the poisson solver</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% OUTPUTS:</span>
+0011 <span class="comment">%    poissFunc: returns the coefficients of the scalar field that solves the</span>
+0012 <span class="comment">%    Poisson equation. Use the syntax:</span>
+0013 <span class="comment">%        - v = poissFunc(&quot;rho&quot;,rhoCoeff):    for a known charge density</span>
+0014 <span class="comment">%        - v = q*poissFunc(&quot;psi&quot;,psiCoeff):    for a set of wavefunctions with charge q</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% SEE ALSO: FEMAT, SETUP_LINSOLVE, SETUP_LITSOLVE</span>
+0017 <span class="keyword">arguments</span>
+0018     pts (:,:) double {mustBeFinite,mustBeReal}
+0019     tri (:,:) {mustBeInteger,mustBePositive}
+0020     epsCoeff (:,:) double {mustBeFinite,mustBeReal}
+0021     opt.method string {mustBeMember(opt.method,<span class="keyword">...</span>
+0022         [<span class="string">&quot;decompose&quot;</span>,<span class="string">&quot;preinvert&quot;</span>,<span class="string">&quot;full&quot;</span>,<span class="string">&quot;iterative&quot;</span>,<span class="keyword">...</span>
+0023         <span class="string">&quot;lsqr&quot;</span>,<span class="string">&quot;pcg&quot;</span>,<span class="string">&quot;minres&quot;</span>,<span class="string">&quot;gmres&quot;</span>,<span class="string">&quot;qmr&quot;</span>,<span class="string">&quot;tfqmr&quot;</span>])} = <span class="string">&quot;decompose&quot;</span>
+0024     opt.useZeroMean (1,1) logical = false;
+0025 <span class="keyword">end</span>
+0026 
+0027 <span class="comment">% find the number of vertices per simplex</span>
+0028 [Ndim,Npts] = size(pts);
+0029 tri = tri(1:Ndim+1,:);
+0030 [Nvtx,Ntri] = size(tri);
+0031 svol = <a href="../functions/finite_elements/simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0032 
+0033 <span class="comment">% compute the left-hand side of the poisson equation</span>
+0034 L = <a href="FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>(pts,tri,<span class="string">&quot;stiffness&quot;</span>,epsCoeff);
+0035 
+0036 <span class="comment">% Poisson boundary matrix</span>
+0037 <span class="keyword">if</span> opt.useZeroMean == false
+0038     sL = <a href="FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>(pts,tri,<span class="string">&quot;surface&quot;</span>, epsCoeff);
+0039     L = L - sL;
+0040 <span class="keyword">else</span>
+0041     <span class="comment">% use zero-mean to enforce unique solution</span>
+0042     M = <a href="FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>(pts,tri,<span class="string">&quot;overlap&quot;</span>);
+0043     L = [[L, sum(M,2)];
+0044         [sum(M,1), 0]];
+0045 <span class="keyword">end</span>
+0046 L = L/(4*pi);
+0047 
+0048 <span class="comment">% select solver method</span>
+0049 <span class="keyword">if</span> ismember(opt.method,[<span class="string">&quot;decompose&quot;</span>,<span class="string">&quot;preinvert&quot;</span>,<span class="string">&quot;full&quot;</span>])
+0050     solverFunc = <a href="../functions/misc/setup_linsolve.html" class="code" title="function [solverFunc] = setup_linsolve(A,dim,method)">setup_linsolve</a>(L,1,opt.method);
+0051 <span class="keyword">elseif</span> opt.method~=<span class="string">&quot;iterative&quot;</span>
+0052     solverFunc = <a href="../functions/misc/setup_litsolve.html" class="code" title="function [solverFunc] = setup_litsolve(A,dim,opt)">setup_litsolve</a>(L,1,opt.method);
+0053 <span class="keyword">else</span>
+0054     solverFunc = <a href="../functions/misc/setup_litsolve.html" class="code" title="function [solverFunc] = setup_litsolve(A,dim,opt)">setup_litsolve</a>(L,1,<span class="string">&quot;auto&quot;</span>);
+0055 <span class="keyword">end</span>
+0056 
+0057 <span class="comment">% rho is first-order on the domain (if rho has one argument)</span>
+0058 [intCoeff,aa,bb] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,2);
+0059 int_ab = intCoeff .* svol;
+0060 t_aa = tri(aa,:);
+0061 t_bb = tri(bb,:);
+0062 
+0063 <span class="comment">% flatten for accumarray</span>
+0064 int_ab = int_ab(:);
+0065 t_aa = t_aa(:);
+0066 t_bb = t_bb(:);
+0067 
+0068 <span class="comment">% rho is second-order on the domain (if rho has two arguments)</span>
+0069 [intCoeff,ii,jj,kk] = <a href="../functions/finite_elements/bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,3);
+0070 int_ijk = intCoeff .* svol;
+0071 t_ii = tri(ii,:);
+0072 t_jj = tri(jj,:);
+0073 t_kk = tri(kk,:);
+0074 
+0075 <span class="comment">% flatten for accumarray</span>
+0076 int_ijk = int_ijk(:);
+0077 t_ii = t_ii(:);
+0078 t_jj = t_jj(:);
+0079 t_kk = t_kk(:);
+0080 
+0081 <span class="comment">% return the density-vector constructor function</span>
+0082 poissFunc = @<a href="#_sub3" class="code" title="subfunction [v_ee] = compute_potential(data_type, data_val)">compute_potential</a>;
+0083 
+0084 <span class="comment">%-----------------------------------------------------------</span>
+0085     <span class="keyword">function</span> [out] = <a href="#_sub1" class="code" title="subfunction [out] = rvec_from_rho(rho)">rvec_from_rho</a>(rho)
+0086     <span class="comment">% computes the right side of the Poisson equation from the density rho</span>
+0087     <span class="keyword">if</span> isvector(rho) &amp;&amp; numel(rho)==Npts
+0088         rho = rho(t_bb);
+0089     <span class="keyword">elseif</span> isequal(size(rho),[Nvtx,Ntri])
+0090         rho = rho(bb,:);
+0091     <span class="keyword">elseif</span> isequal(size(rho),[Ntri,Nvtx])
+0092         rho = rho(:,bb).';
+0093     <span class="keyword">else</span>
+0094         error(<span class="string">&quot;ERROR: the input rho has invalid size&quot;</span>)
+0095     <span class="keyword">end</span>
+0096     <span class="comment">% integrate</span>
+0097     out = accumarray(t_aa, (int_ab .* rho(:)), [Npts,1]);
+0098     <span class="keyword">end</span>
+0099 <span class="comment">%-----------------------------------------------------------</span>
+0100     <span class="keyword">function</span> [out] = <a href="#_sub2" class="code" title="subfunction [out] = rvec_from_psi(psi)">rvec_from_psi</a>(psi)
+0101     <span class="comment">% computes the right side of the Poisson equation from the wavefunctions psi</span>
+0102     <span class="keyword">if</span> ~ismatrix(psi)
+0103         error(<span class="string">&quot;ERROR: the input psi has invalid size&quot;</span>)
+0104     <span class="keyword">elseif</span> size(psi,1)==Npts
+0105         rho = zeros(size(t_ii));
+0106         <span class="keyword">for</span> nn = 1:size(psi,2)
+0107             ket = psi(:,nn);
+0108             rho = rho + (conj(ket(t_jj)) .* ket(t_kk));
+0109         <span class="keyword">end</span>
+0110     <span class="keyword">elseif</span> size(psi,2)==Npts
+0111         rho = zeros(size(t_ii));
+0112         <span class="keyword">for</span> nn = 1:size(psi,1)
+0113             ket = psi(nn,:);
+0114             rho = rho + (conj(ket(t_jj)) .* ket(t_kk));
+0115         <span class="keyword">end</span>
+0116     <span class="keyword">elseif</span> isequal(size(psi),[Nvtx,Ntri])
+0117         rho = (conj(psi(jj,:)) .* psi(kk,:));
+0118     <span class="keyword">elseif</span> isequal(size(psi),[Ntri,Nvtx])
+0119         rho = (conj(psi(:,jj)) .* psi(:,kk)).';
+0120     <span class="keyword">else</span>
+0121         error(<span class="string">&quot;ERROR: the input psi has invalid size&quot;</span>)
+0122     <span class="keyword">end</span>
+0123     <span class="comment">% integrate</span>
+0124     out = accumarray(t_ii, (int_ijk .* rho(:)), [Npts,1]);
+0125     <span class="keyword">end</span>
+0126 <span class="comment">%-----------------------------------------------------------</span>
+0127     <span class="keyword">function</span> [v_ee] = <a href="#_sub3" class="code" title="subfunction [v_ee] = compute_potential(data_type, data_val)">compute_potential</a>(data_type, data_val)
+0128     <span class="comment">% returns the Coulombic potential in vector form</span>
+0129     <span class="keyword">if</span> ~ismember(data_type,[<span class="string">&quot;rho&quot;</span>,<span class="string">&quot;psi&quot;</span>])
+0130         error(&quot;ERROR: the first argument must be either <span class="string">'rho'</span> or <span class="string">'psi'</span>.&quot;)
+0131     <span class="keyword">elseif</span> data_type==<span class="string">&quot;rho&quot;</span>
+0132         r = <a href="#_sub1" class="code" title="subfunction [out] = rvec_from_rho(rho)">rvec_from_rho</a>(data_val);
+0133     <span class="keyword">elseif</span> data_type==<span class="string">&quot;psi&quot;</span>
+0134         r = <a href="#_sub2" class="code" title="subfunction [out] = rvec_from_psi(psi)">rvec_from_psi</a>(data_val);
+0135     <span class="keyword">end</span>
+0136     <span class="comment">% switch between natural and zero-mean boundary conditions</span>
+0137     <span class="keyword">if</span> opt.useZeroMean==false
+0138         v_ee = solverFunc(r);
+0139     <span class="keyword">else</span>
+0140         r = [r; 0];
+0141         v_ee = solverFunc(r);
+0142         v_ee = v_ee(1:<span class="keyword">end</span>-1);
+0143     <span class="keyword">end</span>
+0144     <span class="comment">%</span>
+0145     <span class="keyword">end</span>
+0146 <span class="comment">%-----------------------------------------------------------</span>
+0147 <span class="keyword">end</span></pre></div>
+</body>
+</html>

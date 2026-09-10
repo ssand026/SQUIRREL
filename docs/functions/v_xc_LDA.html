@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>v_xc_LDA.m</title>
+  <meta name="keywords" content="v_xc_LDA">
+  <meta name="description" content="Compute the exchange-correlation potential using the local-density approximation.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; v_xc_LDA.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>v_xc_LDA
+</h1>
+<h3>Compute the exchange-correlation potential using the local-density approximation.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [out] = v_xc_LDA(mass,perm,rho,opt) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Compute the exchange-correlation potential using the local-density approximation. 
+ If the inputs are left empty, return a function for generating the exchange-correlation
+ potential: out = func(mass,perm,dens). If the inputs &quot;mass&quot;, &quot;perm&quot;, and &quot;dens&quot;
+  are given numeric values, return the numeric exchange-correlation potential.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [out] = v_xc_LDA(mass,perm,rho,opt)</a>
+0002 <span class="comment">% Compute the exchange-correlation potential using the local-density approximation.</span>
+0003 <span class="comment">% If the inputs are left empty, return a function for generating the exchange-correlation</span>
+0004 <span class="comment">% potential: out = func(mass,perm,dens). If the inputs &quot;mass&quot;, &quot;perm&quot;, and &quot;dens&quot;</span>
+0005 <span class="comment">%  are given numeric values, return the numeric exchange-correlation potential.</span>
+0006 <span class="keyword">arguments</span>
+0007     mass (:,1) double {mustBeFinite,mustBeReal,mustBeNonzero} = [];
+0008     perm (:,1) double {mustBeFinite,mustBeReal,mustBeNonzero} = [];
+0009     rho (:,1) double {mustBeFinite,mustBeReal} = [];
+0010     opt.method {mustBeMember(opt.method,[1,2])} = 2;
+0011 <span class="keyword">end</span>
+0012 
+0013 <span class="comment">% There are two sets of empirical values for this formulation of the LDA exchange-correlation</span>
+0014 <span class="comment">% energy, found in units of Rydberg in the papers below</span>
+0015 <span class="keyword">switch</span> opt.method
+0016     <span class="keyword">case</span> 1
+0017         <span class="comment">% L. Hedin and B. I. Lundqvist, &quot;Explicit local exchange-correlation potentials,&quot;</span>
+0018         <span class="comment">% J. Phys. C: Solid State Phys., vol. 4, no. 14, p. 2064, Oct. 1971,</span>
+0019         <span class="comment">% doi: 10.1088/0022-3719/4/14/022.</span>
+0020         A = 0.0368;
+0021         B = 21.0;
+0022     <span class="keyword">case</span> 2
+0023         <span class="comment">% O. Gunnarsson and B. I. Lundqvist, &quot;Exchange and correlation in atoms, molecules, and</span>
+0024         <span class="comment">% solids by the spin-density-functional formalism,&quot;</span>
+0025         <span class="comment">% Phys. Rev. B, vol. 13, no. 10, pp. 4274–4298, May 1976,</span>
+0026         <span class="comment">% doi: 10.1103/PhysRevB.13.4274</span>
+0027         A = 0.0545;
+0028         B = 11.4;
+0029 <span class="keyword">end</span>
+0030 
+0031 <span class="comment">% check that inputs are non-empty and of equal size (or scalars)</span>
+0032 len = [numel(perm),numel(mass),numel(rho)];
+0033 doNumeric = all(len~=0) &amp;&amp; all(len==1 | len==max(len));
+0034 
+0035 <span class="keyword">if</span> doNumeric
+0036     <span class="comment">% The quantity rs is the radius of the sphere (in bohr) that contains exactly one electron.</span>
+0037     <span class="comment">% As the density can be zero-valued, we should avoid taking its inverse. Therefore we replace</span>
+0038     <span class="comment">% all instances of 1/rs with inv_rs, which is proportional to the cube root of the density.</span>
+0039     inv_rs = (4*pi/3 * rho).^(1/3);
+0040     
+0041     <span class="comment">% unitless scaling factor</span>
+0042     alpha = (4/(9*pi))^(1/3);
+0043 
+0044     <span class="comment">% return the explicit potential (in Hartree)</span>
+0045     out = -2/(pi*alpha) * (inv_rs + A*log(1 + B*inv_rs)) .* (mass./(perm.^2));
+0046 <span class="keyword">else</span>
+0047     <span class="comment">% unitless scaling factor</span>
+0048     alpha = (4/(9*pi))^(1/3);
+0049 
+0050     <span class="comment">% return the potential generating function (in Hartree)</span>
+0051     out = @(mass,perm,rho) -2/(pi*alpha) .* (mass./(perm.^2)) .* <span class="keyword">...</span>
+0052         ( (4*pi/3*rho).^(1/3) + A*log( 1 + B*((4*pi/3*rho).^(1/3)) ) );
+0053 <span class="keyword">end</span>
+0054 <span class="keyword">end</span></pre></div>
+</body>
+</html>

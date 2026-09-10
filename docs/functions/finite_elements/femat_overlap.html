@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>femat_overlap.m</title>
+  <meta name="keywords" content="femat_overlap">
+  <meta name="description" content="(memoized) Returns the finite-element overlap matrix">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">finite_elements</a> &gt; femat_overlap.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/finite_elements&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>femat_overlap
+</h1>
+<h3>(memoized) Returns the finite-element overlap matrix</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [M] = femat_overlap(pts,tri) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> (memoized) Returns the finite-element overlap matrix</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a> Computes the barycentric integral coefficients</li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a> (memoized) computes the hypervolume of each simplex in the mesh</li>
+</ul>
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>	<a>Returns the specified finite-element matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="femat_orthobasis.html" class="code" title="function [B] = femat_orthobasis(pts,tri)">femat_orthobasis</a>	<a>(memoized) Returns the matrix that converts between the full and orthonormal basis</a></li>
+</ul>
+<h2><a name="_subfunctions"></a>Subfunctions: </h2>
+<div class="box"><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [M] = femat_overlap_main(pts,tri)</a></li></ul></div>
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [M] = femat_overlap(pts,tri)</a>
+0002 <span class="comment">% (memoized) Returns the finite-element overlap matrix</span>
+0003 <span class="keyword">arguments</span>
+0004     pts (:,:) double {mustBeFinite,mustBeReal}
+0005     tri (:,:) {mustBeInteger,mustBePositive}
+0006 <span class="keyword">end</span>
+0007 
+0008 <span class="comment">% enable memoization for repeated calls</span>
+0009 <span class="keyword">persistent</span> memFunc
+0010 <span class="keyword">if</span> isempty(memFunc)
+0011     memFunc = memoize(@<a href="#_sub1" class="code" title="subfunction [M] = femat_overlap_main(pts,tri)">femat_overlap_main</a>);
+0012     memFunc.CacheSize = 1;
+0013 <span class="keyword">end</span>
+0014 M = memFunc(pts,tri);
+0015 <span class="keyword">end</span>
+0016 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0017 
+0018 <span class="keyword">function</span><a name="_sub1" href="#_subfunctions" class="code"> [M] = femat_overlap_main(pts,tri)</a>
+0019 <span class="comment">% get the simplex volumes</span>
+0020 [Ndim,Npts] = size(pts);
+0021 svol = <a href="simplex_vol.html" class="code" title="function [vol] = simplex_vol(pts,tri)">simplex_vol</a>(pts,tri);
+0022 
+0023 <span class="comment">% assemble integration coefficients</span>
+0024 [intCoeff,ii,jj] = <a href="bary_integral.html" class="code" title="function [intCoeffs,varargout] = bary_integral(Ndim, Nterm, ignore)">bary_integral</a>(Ndim,2);
+0025 
+0026 M = sparse(tri(ii,:),tri(jj,:),svol.*intCoeff,Npts,Npts);
+0027 M = (M + M.')/2;
+0028 <span class="keyword">end</span>
+0029 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span></pre></div>
+</body>
+</html>

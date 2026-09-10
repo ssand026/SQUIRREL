@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>eigenstates.m</title>
+  <meta name="keywords" content="eigenstates">
+  <meta name="description" content="Returns the normalized eigenvectors and the eigenvalues for a Hamiltonian system.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">functions</a> &gt; eigenstates.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>eigenstates
+</h1>
+<h3>Returns the normalized eigenvectors and the eigenvalues for a Hamiltonian system.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [states, energy, didConv] = eigenstates(H,M,opt) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns the normalized eigenvectors and the eigenvalues for a Hamiltonian system.
+ Specifying the overlap-matrix &quot;M&quot; as the 2nd argument solves for the eigen-
+ values/vectors H*v = λ*M*v instead of H*v = λ*v</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [states, energy, didConv] = eigenstates(H,M,opt)</a>
+0002 <span class="comment">% Returns the normalized eigenvectors and the eigenvalues for a Hamiltonian system.</span>
+0003 <span class="comment">% Specifying the overlap-matrix &quot;M&quot; as the 2nd argument solves for the eigen-</span>
+0004 <span class="comment">% values/vectors H*v = λ*M*v instead of H*v = λ*v</span>
+0005 <span class="keyword">arguments</span>
+0006     H (:,:) double {validateattributes(H,{<span class="string">'double'</span>},{<span class="string">'finite'</span>,<span class="string">'square'</span>})}
+0007     M (:,:) double {validateattributes(M,{<span class="string">'double'</span>},{<span class="string">'finite'</span>,<span class="string">'square'</span>})} = [];
+0008     opt.numEigs (1,1) double {mustBeInteger,mustBePositive} = 32;
+0009 <span class="keyword">end</span>
+0010 num_eigs = min(size(H,1),opt.numEigs);
+0011 
+0012 <span class="keyword">if</span> isempty(M)
+0013     <span class="comment">% orthonormal basis</span>
+0014     [states,energy,flag] = eigs(H,num_eigs,<span class="string">&quot;smallestreal&quot;</span>,<span class="string">&quot;FailureTreatment&quot;</span>,<span class="string">&quot;keep&quot;</span>,<span class="keyword">...</span>
+0015         <span class="string">&quot;Tolerance&quot;</span>,1e-12,<span class="string">&quot;SubspaceDimension&quot;</span>,min(max(3*num_eigs,32),size(H,1)));
+0016     states = states ./ sqrt(sum(abs(states).^2,1));
+0017 <span class="keyword">else</span>
+0018     <span class="comment">% sparse basis</span>
+0019     [states,energy,flag] = eigs(H,M,num_eigs,<span class="string">&quot;smallestreal&quot;</span>,<span class="string">&quot;FailureTreatment&quot;</span>,<span class="string">&quot;keep&quot;</span>, <span class="keyword">...</span>
+0020         <span class="string">&quot;Tolerance&quot;</span>,1e-12,<span class="string">&quot;SubspaceDimension&quot;</span>,min(max(3*num_eigs,32),size(H,1)));
+0021     states = states ./ sqrt(sum(conj(states) .* (M * states),1));
+0022 <span class="keyword">end</span>
+0023 energy = reshape(diag(energy),[],1);
+0024 didConv = ~flag;
+0025 <span class="keyword">if</span> any(flag); warning(<span class="string">'some eigenstates did not converge'</span>); <span class="keyword">end</span>
+0026 <span class="keyword">end</span></pre></div>
+</body>
+</html>

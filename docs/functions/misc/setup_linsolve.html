@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>setup_linsolve.m</title>
+  <meta name="keywords" content="setup_linsolve">
+  <meta name="description" content="Returns a function for solving the system of linear equations A*x = b.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">misc</a> &gt; setup_linsolve.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/misc&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>setup_linsolve
+</h1>
+<h3>Returns a function for solving the system of linear equations A*x = b.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [solverFunc] = setup_linsolve(A,dim,method) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns a function for solving the system of linear equations A*x = b.
+ This prevents repeated calculation of any preconditioning steps. For small
+ systems where extreme accuracy is not needed, use the method &quot;preinvert&quot;;
+ otherwise, use the method &quot;decompose&quot;.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/setup_poisson.html" class="code" title="function [poissFunc] = setup_poisson(pts,tri,epsCoeff,opt)">setup_poisson</a>	<a>Initializes the solver for the Poisson equation.</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [solverFunc] = setup_linsolve(A,dim,method)</a>
+0002 <span class="comment">% Returns a function for solving the system of linear equations A*x = b.</span>
+0003 <span class="comment">% This prevents repeated calculation of any preconditioning steps. For small</span>
+0004 <span class="comment">% systems where extreme accuracy is not needed, use the method &quot;preinvert&quot;;</span>
+0005 <span class="comment">% otherwise, use the method &quot;decompose&quot;.</span>
+0006 <span class="keyword">arguments</span>
+0007     A (:,:) double {mustBeFinite}
+0008     dim (1,1) double {mustBeMember(dim,[1,2])} = 1;
+0009     method string {mustBeMember(method,[<span class="string">&quot;decompose&quot;</span>,<span class="string">&quot;preinvert&quot;</span>,<span class="string">&quot;full&quot;</span>])} = <span class="string">&quot;decompose&quot;</span>
+0010 <span class="keyword">end</span>
+0011 <span class="keyword">switch</span> method
+0012     <span class="keyword">case</span> <span class="string">&quot;decompose&quot;</span>
+0013         dA = decomposition(A);
+0014         <span class="keyword">if</span> dim==1; solverFunc = @(b) dA \ b; <span class="keyword">end</span>
+0015         <span class="keyword">if</span> dim==2; solverFunc = @(b) b / dA; <span class="keyword">end</span>
+0016     <span class="keyword">case</span> <span class="string">&quot;preinvert&quot;</span>
+0017         iA = inv(A);
+0018         <span class="keyword">if</span> dim==1; solverFunc = @(b) iA * b; <span class="keyword">end</span>
+0019         <span class="keyword">if</span> dim==2; solverFunc = @(b) b * iA; <span class="keyword">end</span>
+0020     <span class="keyword">case</span> <span class="string">&quot;full&quot;</span>
+0021         <span class="comment">% not recommended</span>
+0022         <span class="keyword">if</span> dim==1; solverFunc = @(b) A \ b; <span class="keyword">end</span>
+0023         <span class="keyword">if</span> dim==2; solverFunc = @(b) b / A; <span class="keyword">end</span>
+0024 <span class="keyword">end</span>
+0025 <span class="keyword">end</span></pre></div>
+</body>
+</html>

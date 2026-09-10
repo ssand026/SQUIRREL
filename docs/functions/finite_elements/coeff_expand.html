@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>coeff_expand.m</title>
+  <meta name="keywords" content="coeff_expand">
+  <meta name="description" content="Expands the coefficient so its value is given for the vertices of each simplex">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">finite_elements</a> &gt; coeff_expand.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/finite_elements&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>coeff_expand
+</h1>
+<h3>Expands the coefficient so its value is given for the vertices of each simplex</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [out] = coeff_expand(pts,tri,coeff) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Expands the coefficient so its value is given for the vertices of each simplex
+
+ The resulting 4-D array will have dimensions [d1, d2, Nvtx, Ntri], where 
+ (d1==d2==1) for a scalar field, (d1==Ndim) &amp; (d2==1) for a vector field, and 
+ (d1==d2==Ndim) for a tensor field.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>	<a>Returns the specified finite-element matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/plotting/zero_surface.html" class="code" title="function [zero_pts, zero_faces] = zero_surface(pts,tri,coeff)">zero_surface</a>	<a>Interpolates over a mesh to find the zero-valued surface of a scalar field</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [out] = coeff_expand(pts,tri,coeff)</a>
+0002 <span class="comment">% Expands the coefficient so its value is given for the vertices of each simplex</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% The resulting 4-D array will have dimensions [d1, d2, Nvtx, Ntri], where</span>
+0005 <span class="comment">% (d1==d2==1) for a scalar field, (d1==Ndim) &amp; (d2==1) for a vector field, and</span>
+0006 <span class="comment">% (d1==d2==Ndim) for a tensor field.</span>
+0007 <span class="keyword">arguments</span>
+0008     pts (:,:) double {mustBeFinite,mustBeReal}
+0009     tri (:,:) {mustBeInteger,mustBePositive}
+0010     coeff (:,:,:,:) double
+0011 <span class="keyword">end</span>
+0012 <span class="comment">% trim the triangulation to the nearest polynomial order</span>
+0013 Ndim = size(pts,1);
+0014 vtx_len = cumsum(factorial(Ndim+1)./(factorial(Ndim-[0:Ndim]) .* factorial([1:Ndim+1])));
+0015 Npoly = find(size(tri,1)&gt;=vtx_len,1,<span class="string">&quot;last&quot;</span>);
+0016 tri = tri(1:vtx_len(Npoly),:);
+0017 
+0018 <span class="comment">% check size of the coefficients</span>
+0019 Ndim = size(pts,1); <span class="comment">% number of spatial dimensions</span>
+0020 Npts = size(pts,2); <span class="comment">% number of nodes in the mesh</span>
+0021 Nvtx = size(tri,1); <span class="comment">% number of vertices per simplex</span>
+0022 Ntri = size(tri,2); <span class="comment">% number of simplices in the mesh</span>
+0023 
+0024 <span class="comment">% squeeze dimensions of length 1 from the coefficient</span>
+0025 oneDims = (size(coeff,[1:ndims(coeff)])==1);
+0026 coeff = permute(coeff,[find(~oneDims),find(oneDims)]);
+0027 
+0028 <span class="comment">% find which dimensions of coeff correspond to the various mesh measures (Ndim, Npts, Nvtx, Ntri)</span>
+0029 csize = size(coeff,[1:ndims(coeff)]);
+0030 dim_is_Ndim = find(csize==Ndim &amp; csize~=1);
+0031 dim_is_Npts = find(csize==Npts);
+0032 dim_is_Nvtx = find(csize==Nvtx);
+0033 dim_is_Ntri = find(csize==Ntri);
+0034 
+0035 <span class="comment">% re-order the coefficient dimensions</span>
+0036 allDims = [1:ndims(coeff)];
+0037 dimOrder = [dim_is_Ndim, dim_is_Npts, dim_is_Nvtx, dim_is_Ntri];
+0038 dimOrder = [dimOrder, allDims(~ismember(allDims,dimOrder))];
+0039 coeff = permute(coeff,dimOrder);
+0040 
+0041 <span class="comment">% get the tensor-order of the coefficient</span>
+0042 order = numel(dim_is_Ndim);
+0043 <span class="keyword">if</span> order &gt; 2
+0044     error(<span class="string">&quot;ERROR: the coefficient cannot be a tensor of order 3 or higher.&quot;</span>)
+0045 <span class="keyword">end</span>
+0046 
+0047 <span class="comment">% reshape the coefficient into a vertex-based tensor</span>
+0048 dim_counts = [numel(dim_is_Npts), numel(dim_is_Nvtx), numel(dim_is_Ntri)];
+0049 
+0050 <span class="keyword">if</span> isequal(dim_counts,[0 0 0])
+0051     <span class="comment">% field is constant over the domain</span>
+0052     <span class="keyword">if</span> order==0
+0053         out = repmat(coeff,Nvtx,Ntri);
+0054     <span class="keyword">elseif</span> order==1
+0055         out = repmat(coeff,1,Nvtx,Ntri);
+0056     <span class="keyword">elseif</span> order==2
+0057         out = repmat(coeff,1,1,Nvtx,Ntri);
+0058     <span class="keyword">end</span>
+0059 <span class="keyword">elseif</span> isequal(dim_counts,[1 0 0])
+0060     <span class="comment">% field is continuous over the domain</span>
+0061     <span class="keyword">if</span> order==0
+0062         out = coeff(tri);
+0063     <span class="keyword">elseif</span> order==1
+0064         out = zeros(Ndim,Nvtx,Ntri);
+0065         <span class="keyword">for</span> ii = 1:Ndim
+0066             temp = reshape(coeff(ii,:),Npts,1);
+0067             out(ii,:,:) = temp(tri);
+0068         <span class="keyword">end</span>
+0069     <span class="keyword">elseif</span> order==2
+0070         out = zeros(Ndim,Ndim,Nvtx,Ntri);
+0071         <span class="keyword">for</span> ii = 1:Ndim
+0072             <span class="keyword">for</span> jj = 1:Ndim
+0073                 temp = reshape(coeff(ii,jj,:),Npts,1);
+0074                 out(ii,jj,:,:) = temp(tri);
+0075             <span class="keyword">end</span>
+0076         <span class="keyword">end</span>
+0077     <span class="keyword">end</span>
+0078 <span class="keyword">elseif</span> isequal(dim_counts,[0 0 1])
+0079     <span class="comment">% field is constant over each simplex</span>
+0080     <span class="keyword">if</span> order==0
+0081         out = repmat(coeff.',Nvtx,1);
+0082     <span class="keyword">elseif</span> order==1
+0083         out = repmat(coeff,1,Nvtx,1);
+0084     <span class="keyword">elseif</span> order==2
+0085         out = repmat(coeff,1,1,Nvtx,1);
+0086     <span class="keyword">end</span>
+0087 <span class="keyword">elseif</span> isequal(dim_counts,[0 1 1])
+0088     <span class="comment">% field is continuous over each simplex</span>
+0089     out = coeff;
+0090 <span class="keyword">else</span>
+0091     <span class="comment">% field has dimensions incompatible with the allowed forms</span>
+0092     error(<span class="string">&quot;ERROR: the coefficient has invalid shape&quot;</span>)
+0093 <span class="keyword">end</span>
+0094 
+0095 <span class="comment">% final reshape step</span>
+0096 <span class="keyword">if</span> order==0
+0097     out = permute(out,[3,4,1,2]);
+0098 <span class="keyword">elseif</span> order==1
+0099     out = permute(out,[1,4,2,3]);
+0100 <span class="keyword">elseif</span> order==2
+0101     <span class="comment">% already in proper order</span>
+0102 <span class="keyword">end</span>
+0103 <span class="keyword">end</span></pre></div>
+</body>
+</html>

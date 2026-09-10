@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>setup_litsolve.m</title>
+  <meta name="keywords" content="setup_litsolve">
+  <meta name="description" content="Returns a function for iteratively solving a system of linear equations.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">misc</a> &gt; setup_litsolve.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/misc&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>setup_litsolve
+</h1>
+<h3>Returns a function for iteratively solving a system of linear equations.</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [solverFunc] = setup_litsolve(A,dim,opt) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns a function for iteratively solving a system of linear equations.
+
+ Use if many linear solves are being done with the same large/sparse matrix.
+ The method &quot;gmres&quot; works well for most matrices, or set method to &quot;auto&quot; to 
+ automatically choose an iterative solver.</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/setup_poisson.html" class="code" title="function [poissFunc] = setup_poisson(pts,tri,epsCoeff,opt)">setup_poisson</a>	<a>Initializes the solver for the Poisson equation.</a></li>
+</ul>
+<h2><a name="_subfunctions"></a>Subfunctions: </h2>
+<div class="box"><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [x] = iterative_linsolve(b)</a></li></ul></div>
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [solverFunc] = setup_litsolve(A,dim,opt)</a>
+0002 <span class="comment">% Returns a function for iteratively solving a system of linear equations.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% Use if many linear solves are being done with the same large/sparse matrix.</span>
+0005 <span class="comment">% The method &quot;gmres&quot; works well for most matrices, or set method to &quot;auto&quot; to</span>
+0006 <span class="comment">% automatically choose an iterative solver.</span>
+0007 <span class="keyword">arguments</span>
+0008     A (:,:) double
+0009     dim (1,1) double {mustBeMember(dim,[1,2])}
+0010     opt.method string {mustBeMember(opt.method, <span class="keyword">...</span>
+0011         [<span class="string">&quot;auto&quot;</span>,<span class="string">&quot;lsqr&quot;</span>,<span class="string">&quot;pcg&quot;</span>,<span class="string">&quot;minres&quot;</span>,<span class="string">&quot;gmres&quot;</span>,<span class="string">&quot;qmr&quot;</span>,<span class="string">&quot;tfqmr&quot;</span>])} = <span class="string">&quot;gmres&quot;</span>;
+0012     opt.iterTol (1,1) double {mustBeInRange(opt.iterTol,0,1)} = 1e-9;
+0013     opt.iterMax (1,1) double {mustBePositive,mustBeInteger} = 128;
+0014 <span class="keyword">end</span>
+0015 
+0016 <span class="comment">% precondition using equilibrate</span>
+0017 <span class="keyword">if</span> dim==2; A = A.'; <span class="keyword">end</span>
+0018 [P,R,C] = equilibrate(A);
+0019 A = R * (P * A) * C;
+0020 
+0021 <span class="comment">% pre-condition using an incomplete LU decomp</span>
+0022 <span class="keyword">if</span> issparse(A)
+0023     [L,U] = ilu(A,struct(<span class="string">'type'</span>,<span class="string">'nofill'</span>,<span class="string">'droptol'</span>,1e-1,<span class="string">'thresh'</span>,0));
+0024 <span class="keyword">else</span>
+0025     L = [];
+0026     U = [];
+0027 <span class="keyword">end</span>
+0028 
+0029 <span class="keyword">if</span> size(A,1)~=size(A,2)
+0030     <span class="comment">% A is rectangular</span>
+0031     opt.method = <span class="string">&quot;lsqr&quot;</span>; 
+0032 <span class="keyword">elseif</span> opt.method == <span class="string">&quot;auto&quot;</span>
+0033     <span class="comment">% choose a solver method</span>
+0034     <span class="keyword">if</span> issymmetric(A)
+0035         <span class="keyword">try</span> chol(A)
+0036             opt.method = <span class="string">&quot;pcg&quot;</span>; <span class="comment">% A is positive definite</span>
+0037         <span class="keyword">catch</span>
+0038             opt.method = <span class="string">&quot;minres&quot;</span>; <span class="comment">% A is not positive definite</span>
+0039         <span class="keyword">end</span>
+0040     <span class="keyword">else</span>
+0041         opt.method = <span class="string">&quot;gmres&quot;</span>; <span class="comment">% A is square but non-symmetric</span>
+0042     <span class="keyword">end</span>
+0043 <span class="keyword">end</span>
+0044 
+0045 <span class="comment">% select solve function</span>
+0046 tol = opt.iterTol;
+0047 maxit = opt.iterMax;
+0048 <span class="keyword">switch</span> opt.method
+0049     <span class="keyword">case</span> <span class="string">&quot;lsqr&quot;</span>
+0050         itsolver = @(A,b) lsqr(A,b,tol,maxit,L,U);
+0051     <span class="keyword">case</span> <span class="string">&quot;gmres&quot;</span>
+0052         itsolver = @(A,b) gmres(A,b,[],tol,maxit,L,U);
+0053     <span class="keyword">case</span> <span class="string">&quot;pcg&quot;</span>
+0054         itsolver = @(A,b) pcg(A,b,tol,maxit,L,U);
+0055     <span class="keyword">case</span> <span class="string">&quot;minres&quot;</span>
+0056         itsolver = @(A,b) minres(A,b,tol,maxit,L,U);
+0057     <span class="keyword">case</span> <span class="string">&quot;qmr&quot;</span>
+0058         itsolver = @(A,b) qmr(A,b,tol,maxit,L,U);
+0059     <span class="keyword">case</span> <span class="string">&quot;tfqmr&quot;</span>
+0060         itsolver = @(A,b) tfqmr(A,b,tol,maxit,L,U);
+0061 <span class="keyword">end</span>
+0062 
+0063 solverFunc = @<a href="#_sub1" class="code" title="subfunction [x] = iterative_linsolve(b)">iterative_linsolve</a>;
+0064 <span class="comment">%----------------------------------------------------------</span>
+0065     <span class="keyword">function</span> [x] = <a href="#_sub1" class="code" title="subfunction [x] = iterative_linsolve(b)">iterative_linsolve</a>(b)
+0066     <span class="keyword">if</span> dim==2; b = b.'; <span class="keyword">end</span>
+0067     <span class="comment">%</span>
+0068     b = (R*(P*b));
+0069     x = zeros(size(b));
+0070     <span class="keyword">for</span> ii = 1:size(x,2)
+0071         [temp,~] = itsolver(A,b(:,ii));
+0072         x(:,ii) = temp;
+0073     <span class="keyword">end</span>
+0074     x = C*x;
+0075     <span class="comment">%</span>
+0076     <span class="keyword">if</span> dim==2; x = x.'; <span class="keyword">end</span>
+0077     <span class="keyword">end</span>
+0078 <span class="comment">%----------------------------------------------------------</span>
+0079 <span class="keyword">end</span></pre></div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>boundary_nodes.m</title>
+  <meta name="keywords" content="boundary_nodes">
+  <meta name="description" content="Returns the logical index corresponding to nodes on the mesh boundary">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">finite_elements</a> &gt; boundary_nodes.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/finite_elements&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>boundary_nodes
+</h1>
+<h3>Returns the logical index corresponding to nodes on the mesh boundary</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [bnodes] = boundary_nodes(pts,tri) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Returns the logical index corresponding to nodes on the mesh boundary</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>	<a>Returns the specified finite-element matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="femat_nullspace.html" class="code" title="function [B] = femat_nullspace(pts,tri)">femat_nullspace</a>	<a>(memoized) Returns the finite-element nullspace matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/meshing/mesh_smooth.html" class="code" title="function [pts,tri] = mesh_smooth(pts,tri,iters)">mesh_smooth</a>	<a>Improves the quality of a mesh by shifting each node towards the center of its connected neighbors</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [bnodes] = boundary_nodes(pts,tri)</a>
+0002 <span class="comment">% Returns the logical index corresponding to nodes on the mesh boundary</span>
+0003 <span class="keyword">arguments</span>
+0004     pts (:,:) double {mustBeFinite,mustBeReal}
+0005     tri (:,:) {mustBeInteger,mustBePositive}
+0006 <span class="keyword">end</span>
+0007 [Ndim, Npts] = size(pts);
+0008 dt = sort(tri(1:Ndim+1,:),1);
+0009 
+0010 <span class="comment">% set of face-node permutations</span>
+0011 per = repmat([1:Ndim+1],1,Ndim+1);
+0012 per(1:Ndim+2:<span class="keyword">end</span>) = [];
+0013 faces = reshape(dt(per,:),Ndim,[]);
+0014 
+0015 <span class="comment">% use minimal memory to store face indices</span>
+0016 data_dim = Ndim*log2(Npts);
+0017 <span class="keyword">if</span> data_dim &lt; 8
+0018     new_type = <span class="string">&quot;uint8&quot;</span>;
+0019 <span class="keyword">elseif</span> data_dim &lt; 16
+0020     new_type = <span class="string">&quot;uint16&quot;</span>;
+0021 <span class="keyword">elseif</span> data_dim &lt; 32
+0022     new_type = <span class="string">&quot;uint32&quot;</span>;
+0023 <span class="keyword">elseif</span> data_dim &lt; 64
+0024     new_type = <span class="string">&quot;uint64&quot;</span>;
+0025 <span class="keyword">else</span>
+0026     <span class="comment">% linearized indices would exceed memory limit (should be difficult to do)</span>
+0027     error(<span class="string">'ERROR: number of mesh nodes is too large to linearize face indices'</span>)
+0028 <span class="keyword">end</span>
+0029 
+0030 <span class="comment">% convert face indexes to a linear index</span>
+0031 faces = cast(faces-1,new_type);
+0032 scl = cast([Npts.^[0:Ndim-1]],new_type);
+0033 
+0034 faceID = scl(1) * faces(1,:);
+0035 <span class="keyword">for</span> jj = 2:length(scl)
+0036     faceID = faceID + (scl(jj) * faces(jj,:));
+0037 <span class="keyword">end</span>
+0038 
+0039 <span class="comment">% find faces belonging to a single simplex</span>
+0040 faceID = sort(faceID);
+0041 test = (faceID ~= [faceID(2:<span class="keyword">end</span>),0]) &amp; (faceID ~= [0,faceID(1:<span class="keyword">end</span>-1)]);
+0042 faceID = faceID(test);
+0043 
+0044 <span class="comment">% convert faceID back to node indices</span>
+0045 bnodes = false(Npts,1);
+0046 <span class="keyword">for</span> kk = Ndim:-1:1
+0047     r = mod(faceID,scl(kk));
+0048     indx = (faceID - r)/scl(kk);
+0049     indx = indx+1;
+0050     bnodes(indx) = true;
+0051     faceID = r;
+0052 <span class="keyword">end</span>
+0053 <span class="keyword">end</span></pre></div>
+</body>
+</html>

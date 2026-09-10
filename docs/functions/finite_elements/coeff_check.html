@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>coeff_check.m</title>
+  <meta name="keywords" content="coeff_check">
+  <meta name="description" content="Checks the dimensions of the inputted scalar/vector/tensor field">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">finite_elements</a> &gt; coeff_check.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/finite_elements&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>coeff_check
+</h1>
+<h3>Checks the dimensions of the inputted scalar/vector/tensor field</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [coeff,order,continuity] = coeff_check(pts,tri,coeff,opt) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> Checks the dimensions of the inputted scalar/vector/tensor field
+
+ INPUTS:
+    pts: node locations, each column stores the coordinates for a particular node
+    tri: triangulation, each column stores the node-indices for a particular simplex
+    coeff: numeric array representing a scalar/vector/tensor field
+    strictDims(optional,bool): require coefficient to be a pure field (no extra dims)
+
+ OUTPUTS:
+    1) coeff: the re-sized input array
+    2) order: the field order i.e., scalar/vector/tensor 
+        - 0:    coeff is a scalar field, [d1,d2]==[1,1]
+        - 1:    coeff is a vector field, [d1,d2]==[Ndim,1]
+        - 2:    coeff is a tensor field, [d1,d2]==[Ndim,Ndim]
+    3) continuity: whether coeff is constant/continuous over the domain/simplexes
+        - &quot;domain_constant&quot;:    size(coeff) = [d1,d2]
+        - &quot;domain_continuous&quot;:    size(coeff) = [d1,d2,Npts]
+        - &quot;simplex_constant&quot;:    size(coeff) = [d1,d2,Ntri]
+        - &quot;simplex_continuous&quot;:    size(coeff) = [d1,d2,Nvtx,Ntri]
+
+ SEE ALSO: COEFF_EVAL, <a href="coeff_expand.html" class="code" title="function [out] = coeff_expand(pts,tri,coeff)">COEFF_EXPAND</a>, FUNC_REDUCE</pre></div>
+
+<h2>This function calls: </h2>
+
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/coeff_eval.html" class="code" title="function [c_vals,c_dims,c_type] = coeff_eval(pts,tri,coeff,reg)">coeff_eval</a>	<a>Evaluates the input as a finite-element coefficient.</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/plotting/zero_surface.html" class="code" title="function [zero_pts, zero_faces] = zero_surface(pts,tri,coeff)">zero_surface</a>	<a>Interpolates over a mesh to find the zero-valued surface of a scalar field</a></li>
+</ul>
+
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [coeff,order,continuity] = coeff_check(pts,tri,coeff,opt)</a>
+0002 <span class="comment">% Checks the dimensions of the inputted scalar/vector/tensor field</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% INPUTS:</span>
+0005 <span class="comment">%    pts: node locations, each column stores the coordinates for a particular node</span>
+0006 <span class="comment">%    tri: triangulation, each column stores the node-indices for a particular simplex</span>
+0007 <span class="comment">%    coeff: numeric array representing a scalar/vector/tensor field</span>
+0008 <span class="comment">%    strictDims(optional,bool): require coefficient to be a pure field (no extra dims)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% OUTPUTS:</span>
+0011 <span class="comment">%    1) coeff: the re-sized input array</span>
+0012 <span class="comment">%    2) order: the field order i.e., scalar/vector/tensor</span>
+0013 <span class="comment">%        - 0:    coeff is a scalar field, [d1,d2]==[1,1]</span>
+0014 <span class="comment">%        - 1:    coeff is a vector field, [d1,d2]==[Ndim,1]</span>
+0015 <span class="comment">%        - 2:    coeff is a tensor field, [d1,d2]==[Ndim,Ndim]</span>
+0016 <span class="comment">%    3) continuity: whether coeff is constant/continuous over the domain/simplexes</span>
+0017 <span class="comment">%        - &quot;domain_constant&quot;:    size(coeff) = [d1,d2]</span>
+0018 <span class="comment">%        - &quot;domain_continuous&quot;:    size(coeff) = [d1,d2,Npts]</span>
+0019 <span class="comment">%        - &quot;simplex_constant&quot;:    size(coeff) = [d1,d2,Ntri]</span>
+0020 <span class="comment">%        - &quot;simplex_continuous&quot;:    size(coeff) = [d1,d2,Nvtx,Ntri]</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% SEE ALSO: COEFF_EVAL, COEFF_EXPAND, FUNC_REDUCE</span>
+0023 <span class="keyword">arguments</span>
+0024     pts (:,:) double {mustBeFinite,mustBeReal}
+0025     tri (:,:) {mustBeInteger,mustBePositive}
+0026     coeff double {mustBeFinite,mustBeReal}
+0027     opt.strictDims (1,1) logical = true;
+0028 <span class="keyword">end</span>
+0029 
+0030 <span class="comment">% trim the triangulation to the nearest polynomial order</span>
+0031 Ndim = size(pts,1);
+0032 vtx_len = cumsum(factorial(Ndim+1)./(factorial(Ndim-[0:Ndim]) .* factorial([1:Ndim+1])));
+0033 Npoly = find(size(tri,1)&gt;=vtx_len,1,<span class="string">&quot;last&quot;</span>);
+0034 tri = tri(1:vtx_len(Npoly),:);
+0035 
+0036 <span class="comment">% check size of the coefficients</span>
+0037 Ndim = size(pts,1); <span class="comment">% number of spatial dimensions</span>
+0038 Npts = size(pts,2); <span class="comment">% number of nodes in the mesh</span>
+0039 Nvtx = size(tri,1); <span class="comment">% number of vertices per simplex</span>
+0040 Ntri = size(tri,2); <span class="comment">% number of simplices in the mesh</span>
+0041 
+0042 csize = size(coeff,[1:ndims(coeff)]);
+0043 cdims = (csize == [Ndim; Npts; Nvtx; Ntri]);
+0044 
+0045 <span class="keyword">if</span> any(sum(cdims,1) &gt; 1)
+0046     <span class="comment">% dimensions coincide, cannot determine coefficient shape</span>
+0047     error(<span class="string">&quot;ERROR: overlap between the number of nodes, dimensions, vertices, or simplexes &quot;</span> + <span class="keyword">...</span>
+0048         <span class="string">&quot;of the mesh. These numbers are typically distinct outside of extremely small meshes&quot;</span>)
+0049 <span class="keyword">end</span>
+0050 
+0051 <span class="comment">% find which dimensions of coeff correspond to the various mesh measures (Ndim, Npts, Nvtx, Ntri)</span>
+0052 dim_is_Ndim = find(cdims(1,:));
+0053 dim_is_Npts = find(cdims(2,:));
+0054 dim_is_Nvtx = find(cdims(3,:));
+0055 dim_is_Ntri = find(cdims(4,:));
+0056 
+0057 <span class="comment">% find any dimensions that do not correspond to the mesh measures</span>
+0058 other_dim = find(~any(cdims,1));
+0059 other_dim = [other_dim(csize(other_dim)&gt;1), other_dim(csize(other_dim)&lt;=1)];
+0060 
+0061 <span class="keyword">if</span> opt.strictDims &amp;&amp; any(csize(other_dim)~=1)
+0062     error(<span class="string">&quot;ERROR: one or more of the array dimensions have a different size than the number of &quot;</span> + <span class="keyword">...</span>
+0063         <span class="string">&quot;nodes, dimensions, vertices, or simplexes in the mesh.&quot;</span>)
+0064 <span class="keyword">end</span>
+0065 
+0066 <span class="comment">% check the order/degree of the tensor field</span>
+0067 <span class="comment">% order = 0; scalar field</span>
+0068 <span class="comment">% order = 1; vector field</span>
+0069 <span class="comment">% order = 2; tensor field (matrices)</span>
+0070 <span class="comment">% order &gt; 2; higher-order tensor field</span>
+0071 order = numel(dim_is_Ndim);
+0072 <span class="keyword">if</span> order &gt; 2
+0073     warning(<span class="string">&quot;Tensor coefficients above 2nd order are not currently supported&quot;</span>)
+0074 <span class="keyword">end</span>
+0075 
+0076 <span class="comment">% add check for whether the coefficient can be reduced to a more compact form ?</span>
+0077 
+0078 <span class="comment">% check the coefficient continuity</span>
+0079 dim_counts = [numel(dim_is_Npts), numel(dim_is_Nvtx), numel(dim_is_Ntri)];
+0080 <span class="keyword">if</span> isequal(dim_counts,[0 0 0])
+0081     <span class="comment">% field is constant on the domain</span>
+0082     continuity = <span class="string">&quot;domain_constant&quot;</span>;
+0083 <span class="keyword">elseif</span> isequal(dim_counts,[1 0 0])
+0084     <span class="comment">% field is continuous on the domain</span>
+0085     continuity = <span class="string">&quot;domain_continuous&quot;</span>;
+0086 <span class="keyword">elseif</span> isequal(dim_counts,[0 1 0])
+0087     <span class="comment">% field is constant over each simplex</span>
+0088     continuity = <span class="string">&quot;simplex_constant&quot;</span>;
+0089 <span class="keyword">elseif</span> isequal(dim_counts,[0 1 1])
+0090     <span class="comment">% field is continuous over each simplex</span>
+0091     continuity = <span class="string">&quot;simplex_continuous&quot;</span>;
+0092 <span class="keyword">else</span>
+0093     <span class="comment">% field has dimensions incompatible with the allowed forms</span>
+0094     error(<span class="string">&quot;ERROR: the inputted coefficient has invalid shape&quot;</span>)
+0095 <span class="keyword">end</span>
+0096 
+0097 <span class="comment">% permute the coefficient dimensions</span>
+0098 dimOrder = [dim_is_Ndim, dim_is_Npts, dim_is_Nvtx, dim_is_Ntri, other_dim];
+0099 dimOrder = [dimOrder, setdiff([1:ndims(coeff)],dimOrder)];
+0100 coeff = permute(coeff,dimOrder);
+0101 <span class="keyword">end</span></pre></div>
+</body>
+</html>

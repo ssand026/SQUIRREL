@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>femat_nullspace.m</title>
+  <meta name="keywords" content="femat_nullspace">
+  <meta name="description" content="(memoized) Returns the finite-element nullspace matrix">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">functions</a> &gt; <a href="index.html">finite_elements</a> &gt; femat_nullspace.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for functions/finite_elements&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>femat_nullspace
+</h1>
+<h3>(memoized) Returns the finite-element nullspace matrix</h3>
+
+<h2><a name="_synopsis"></a>Syntax: </h2>
+<div class="box"><strong> [B] = femat_nullspace(pts,tri) </strong></div>
+
+<h2><a name="_description"></a>Description:</h2>
+<div class="fragment"><pre class="comment"> (memoized) Returns the finite-element nullspace matrix</pre></div>
+
+<h2>This function calls: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="boundary_nodes.html" class="code" title="function [bnodes] = boundary_nodes(pts,tri)">boundary_nodes</a> Returns the logical index corresponding to nodes on the mesh boundary</li>
+</ul>
+<h2>This function is called by: </h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/FEmat.html" class="code" title="function [out] = FEmat(pts, tri, matType, scalarC, vectorC)">FEmat</a>	<a>Returns the specified finite-element matrix</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/dropping/drop_distance.html" class="code" title="function [H] = drop_distance(H,pts,tri,max_dist)">drop_distance</a>	<a>Drops elements from the Hamiltonian using a distance-based criterion</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../functions/dropping/drop_neighbor.html" class="code" title="function [H] = drop_neighbor(H,pts,tri,max_edge)">drop_neighbor</a>	<a>Drops elements from the Hamiltonian using a connection-based criterion</a></li>
+</ul><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="femat_orthobasis.html" class="code" title="function [B] = femat_orthobasis(pts,tri)">femat_orthobasis</a>	<a>(memoized) Returns the matrix that converts between the full and orthonormal basis</a></li>
+</ul>
+<h2><a name="_subfunctions"></a>Subfunctions: </h2>
+<div class="box"><ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [B] = femat_nullspace_main(pts,tri)</a></li></ul></div>
+
+<h2><a name="_source"></a>Source Code: </h2>
+<div class="fragment"><pre>0001 <span class="keyword">function</span><a name="_sub0" href="#_subfunctions" class="code"> [B] = femat_nullspace(pts,tri)</a>
+0002 <span class="comment">% (memoized) Returns the finite-element nullspace matrix</span>
+0003 <span class="keyword">arguments</span>
+0004     pts (:,:) double {mustBeFinite,mustBeReal}
+0005     tri (:,:) {mustBeInteger,mustBePositive}
+0006 <span class="keyword">end</span>
+0007 
+0008 <span class="comment">% enable memoization for repeated calls</span>
+0009 <span class="keyword">persistent</span> memFunc
+0010 <span class="keyword">if</span> isempty(memFunc)
+0011     memFunc = memoize(@<a href="#_sub1" class="code" title="subfunction [B] = femat_nullspace_main(pts,tri)">femat_nullspace_main</a>);
+0012     memFunc.CacheSize = 1;
+0013 <span class="keyword">end</span>
+0014 B = memFunc(pts,tri);
+0015 <span class="keyword">end</span>
+0016 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0017 
+0018 <span class="keyword">function</span><a name="_sub1" href="#_subfunctions" class="code"> [B] = femat_nullspace_main(pts,tri)</a>
+0019 Npts = size(pts,2);
+0020 bnodes = <a href="boundary_nodes.html" class="code" title="function [bnodes] = boundary_nodes(pts,tri)">boundary_nodes</a>(pts,tri);
+0021 B = speye(Npts,Npts);
+0022 B(:,bnodes) = [];
+0023 <span class="keyword">end</span>
+0024 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span></pre></div>
+</body>
+</html>
